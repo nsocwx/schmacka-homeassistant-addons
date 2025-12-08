@@ -11,4 +11,4 @@ This add-on provides RTSP streaming capabilities to Prusa printers for Home Assi
 
 [stage-badge]: https://img.shields.io/badge/Addon%20stage-stable-green.svg
 [release-badge]: https://img.shields.io/badge/version-v1.0.0-blue.svg
-[release]: https://github.com/schmacka/rtsp-to-prusa-ha/tree/v1.0.0
+[release]: https://github.com/schmacka/Prusa-Connect-RTSP-HA/tree/v1.0.0

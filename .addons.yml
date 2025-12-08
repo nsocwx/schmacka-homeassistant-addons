@@ -5,6 +5,6 @@ addons:
     target: printernizer-ha
     image: ghcr.io/schmacka/printernizer-ha-{arch}
   rtsp-to-prusa-ha:
-    repository: schmacka/rtsp-to-prusa-ha
+    repository: schmacka/Prusa-Connect-RTSP-HA
     target: rtsp-to-prusa-ha
     image: ghcr.io/schmacka/rtsp-to-prusa-ha-{arch}

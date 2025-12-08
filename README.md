@@ -71,9 +71,9 @@ If you are here, seeking help, please look at the issues of the specific addon.
 [printernizer-ha-armv7-badge]: https://img.shields.io/badge/armv7-yes-green.svg
 [printernizer-ha-i386-badge]: https://img.shields.io/badge/i386-yes-green.svg
 
-[rtsp-to-prusa-ha-files]: https://github.com/schmacka/rtsp-to-prusa-ha/tree/1.0.0
-[rtsp-to-prusa-ha-doc]: https://github.com/schmacka/rtsp-to-prusa-ha/blob/1.0.0/README.md
-[rtsp-to-prusa-ha-issue]: https://github.com/schmacka/rtsp-to-prusa-ha/issues
+[rtsp-to-prusa-ha-files]: https://github.com/schmacka/Prusa-Connect-RTSP-HA/tree/1.0.0
+[rtsp-to-prusa-ha-doc]: https://github.com/schmacka/Prusa-Connect-RTSP-HA/blob/1.0.0/README.md
+[rtsp-to-prusa-ha-issue]: https://github.com/schmacka/Prusa-Connect-RTSP-HA/issues
 [rtsp-to-prusa-ha-version-badge]: https://img.shields.io/badge/version-1.0.0-blue.svg
 [rtsp-to-prusa-ha-aarch64-badge]: https://img.shields.io/badge/aarch64-yes-green.svg
 [rtsp-to-prusa-ha-amd64-badge]: https://img.shields.io/badge/amd64-yes-green.svg
