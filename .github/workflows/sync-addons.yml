@@ -2,8 +2,10 @@ name: Sync Add-on Configs
 
 on:
   schedule:
-    - cron: "0 */6 * * *"  # Every 6 hours
+    - cron: "0 */6 * * *"  # Every 6 hours (fallback)
   workflow_dispatch:  # Manual trigger
+  repository_dispatch:  # Triggered by source repo webhooks
+    types: [sync-request]
   push:
     paths:
       - ".addons.yml"
