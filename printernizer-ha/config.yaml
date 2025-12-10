@@ -1,0 +1,9 @@
+name: "Printernizer HA"
+version: "1.0.0"
+slug: "printernizer-ha"
+description: "Printernizer Home Assistant Add-on"
+arch:
+  - amd64
+  - aarch64
+  - armv7
+image: "ghcr.io/schmacka/printernizer-ha-{arch}"

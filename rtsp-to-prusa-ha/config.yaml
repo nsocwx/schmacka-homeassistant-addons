@@ -1,0 +1,9 @@
+name: "RTSP to Prusa Connect HA"
+version: "1.0.0"
+slug: "rtsp-to-prusa-ha"
+description: "RTSP to Prusa Connect Home Assistant Add-on"
+arch:
+  - amd64
+  - aarch64
+  - armv7
+image: "ghcr.io/schmacka/rtsp-to-prusa-ha-{arch}"
