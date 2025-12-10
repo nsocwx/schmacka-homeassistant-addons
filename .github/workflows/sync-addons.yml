@@ -29,23 +29,34 @@ jobs:
             echo "Processing addon: $addon"
 
             repo=$(yq e ".addons.${addon}.repository" .addons.yml)
+            branch=$(yq e ".addons.${addon}.branch // \"main\"" .addons.yml)
+            source_path=$(yq e ".addons.${addon}.source_path // \"\"" .addons.yml)
             target=$(yq e ".addons.${addon}.target" .addons.yml)
             image=$(yq e ".addons.${addon}.image" .addons.yml)
 
             echo "  Repository: $repo"
+            echo "  Branch: $branch"
+            echo "  Source path: $source_path"
             echo "  Target: $target"
             echo "  Image: $image"
 
             # Create target directory if it doesn't exist
             mkdir -p "$target"
 
+            # Build base URL with optional source path
+            if [ -n "$source_path" ]; then
+              base_url="https://raw.githubusercontent.com/${repo}/${branch}/${source_path}"
+            else
+              base_url="https://raw.githubusercontent.com/${repo}/${branch}"
+            fi
+
             # Try to fetch config.yaml, fall back to config.json
-            config_url="https://raw.githubusercontent.com/${repo}/main/config.yaml"
+            config_url="${base_url}/config.yaml"
             config_file="config.yaml"
 
             if ! curl -sfL "$config_url" -o "${target}/${config_file}" 2>/dev/null; then
               # Try config.json
-              config_url="https://raw.githubusercontent.com/${repo}/main/config.json"
+              config_url="${base_url}/config.json"
               config_file="config.json"
 
               if ! curl -sfL "$config_url" -o "${target}/${config_file}" 2>/dev/null; then
@@ -73,7 +84,7 @@ jobs:
 
             # Also sync optional files if they exist
             for file in icon.png logo.png DOCS.md CHANGELOG.md; do
-              file_url="https://raw.githubusercontent.com/${repo}/main/${file}"
+              file_url="${base_url}/${file}"
               if curl -sfL "$file_url" -o "${target}/${file}" 2>/dev/null; then
                 echo "  Downloaded: $file"
               else

@@ -2,9 +2,13 @@ channel: stable
 addons:
   printernizer-ha:
     repository: schmacka/printernizer-ha
+    branch: master
+    source_path: printernizer
     target: printernizer-ha
     image: ghcr.io/schmacka/printernizer-ha-{arch}
   rtsp-to-prusa-ha:
     repository: schmacka/Prusa-Connect-RTSP-HA
+    branch: main
+    source_path: prusa_connect_rtsp
     target: rtsp-to-prusa-ha
     image: ghcr.io/schmacka/rtsp-to-prusa-ha-{arch}
