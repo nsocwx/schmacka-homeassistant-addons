@@ -87,12 +87,40 @@ jobs:
             fi
 
             # Also sync optional files if they exist
-            for file in README.md icon.png logo.png DOCS.md CHANGELOG.md; do
+            for file in README.md icon.png logo.png DOCS.md CHANGELOG.md Dockerfile build.yaml requirements.txt run.sh; do
               file_url="${base_url}/${file}"
               if curl -sfL "$file_url" -o "${target}/${file}" 2>/dev/null; then
                 echo "  Downloaded: $file"
+                # Make shell scripts executable
+                if [[ "$file" == *.sh ]]; then
+                  chmod +x "${target}/${file}"
+                fi
               else
                 rm -f "${target}/${file}" 2>/dev/null || true
+              fi
+            done
+
+            # Sync source directories if they exist (for local builds)
+            for dir in src frontend migrations; do
+              dir_check_url="${base_url}/${dir}/"
+              if curl -sfL --head "${base_url}/${dir}" 2>/dev/null | grep -q "200\|301\|302"; then
+                echo "  Syncing directory: $dir"
+                rm -rf "${target}/${dir}"
+                mkdir -p "${target}/${dir}"
+                # Use git sparse checkout for directory sync
+                temp_dir=$(mktemp -d)
+                git clone --depth 1 --filter=blob:none --sparse "https://github.com/${repo}" "$temp_dir" 2>/dev/null || true
+                if [ -d "$temp_dir" ]; then
+                  cd "$temp_dir"
+                  git sparse-checkout set "${source_path}/${dir}" 2>/dev/null || true
+                  git checkout "$branch" 2>/dev/null || true
+                  if [ -d "${source_path}/${dir}" ]; then
+                    cp -r "${source_path}/${dir}"/* "${GITHUB_WORKSPACE}/${target}/${dir}/" 2>/dev/null || true
+                  fi
+                  cd "$GITHUB_WORKSPACE"
+                  rm -rf "$temp_dir"
+                  echo "    Done syncing $dir"
+                fi
               fi
             done
 

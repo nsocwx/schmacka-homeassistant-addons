@@ -5,7 +5,6 @@ addons:
     branch: master
     source_path: printernizer
     target: printernizer-ha
-    image: ghcr.io/schmacka/printernizer-ha-{arch}
   rtsp-to-prusa-ha:
     repository: schmacka/Prusa-Connect-RTSP-HA
     branch: main
