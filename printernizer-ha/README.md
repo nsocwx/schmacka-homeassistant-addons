@@ -1,7 +1,7 @@
 # Printernizer - Home Assistant Add-on
 
-[![GitHub Release](https://img.shields.io/github/release/schmacka/printernizer.svg)](https://github.com/schmacka/printernizer/releases)
-[![License](https://img.shields.io/github/license/schmacka/printernizer.svg)](https://github.com/schmacka/printernizer/blob/master/LICENSE)
+[![GitHub Release](https://img.shields.io/github/release/schmacka/printernizer-ha.svg)](https://github.com/schmacka/printernizer-ha/releases)
+[![License](https://img.shields.io/github/license/schmacka/printernizer-ha.svg)](https://github.com/schmacka/printernizer-ha/blob/master/LICENSE)
 
 Professional 3D Printer Management for Home Assistant - Bambu Lab A1 and Prusa Core One support.
 
