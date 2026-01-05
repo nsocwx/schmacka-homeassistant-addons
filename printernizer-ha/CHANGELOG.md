@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.14.3] - 2026-01-05
+
+### Changed
+- **Documentation Cleanup**: Archived completed sprint reports and consolidated plan files
+  - Moved 15 obsolete planning docs to `docs/archive/`
+  - Updated MASTERPLAN.md with Sprint 3 completion status
+  - Updated README with current version (v2.14.2) and test count (1200+)
+  - Marked all technical debt items from v2.14.1 as resolved
+
+## [2.14.2] - 2026-01-05
+
+### Fixed
+- **Filament Display API Bug**: Fixed missing filaments field in printer API response
+  - Backend was extracting filament data from Bambu Lab AMS and Prusa sensors
+  - API endpoint was not exposing this data to the frontend
+  - Added filaments field to PrinterResponse model
+  - Extract and serialize filament data in _printer_to_response()
+  - Enables existing filament display feature in dashboard
+
 ## [2.14.1] - 2026-01-04
 
 ### Fixed
