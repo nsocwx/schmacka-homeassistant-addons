@@ -544,6 +544,55 @@ class Database:
             return []
 
     # ============================================================================
+    # Public Query Methods (for routers and external use)
+    # ============================================================================
+
+    async def fetch_one(self, sql: str, params: Optional[tuple] = None):
+        """
+        Execute a query and return a single row.
+
+        Args:
+            sql: SQL query string
+            params: Optional tuple of query parameters
+
+        Returns:
+            Single row as dict-like object, or None if no results
+        """
+        # Convert tuple to list for internal method
+        param_list = list(params) if params else None
+        return await self._fetch_one(sql, param_list)
+
+    async def fetch_all(self, sql: str, params: Optional[tuple] = None):
+        """
+        Execute a query and return all rows.
+
+        Args:
+            sql: SQL query string
+            params: Optional tuple of query parameters
+
+        Returns:
+            List of rows as dict-like objects
+        """
+        # Convert tuple to list for internal method
+        param_list = list(params) if params else None
+        return await self._fetch_all(sql, param_list)
+
+    async def execute(self, sql: str, params: Optional[tuple] = None) -> bool:
+        """
+        Execute a write operation (INSERT, UPDATE, DELETE).
+
+        Args:
+            sql: SQL statement
+            params: Optional tuple of parameters
+
+        Returns:
+            True if successful, False otherwise
+        """
+        # Convert tuple to list for internal method
+        param_list = list(params) if params else None
+        return await self._write(sql, param_list)
+
+    # ============================================================================
     # Connection Pool Management
     # ============================================================================
 
@@ -2209,6 +2258,26 @@ class Database:
                         ('007', 'Add thumbnail columns to files table')
                     )
                     logger.info("Migration 007 completed")
+
+                # Migration 008: Add webcam_url column to printers table
+                if '008' not in applied_migrations:
+                    logger.info("Migration 008: Adding webcam_url column to printers table")
+
+                    # Check current columns
+                    await cursor.execute("PRAGMA table_info(printers)")
+                    columns = await cursor.fetchall()
+                    column_names = [col['name'] for col in columns] if columns else []
+
+                    # Add webcam_url column if it doesn't exist
+                    if 'webcam_url' not in column_names:
+                        logger.info("Migration 008: Adding webcam_url column")
+                        await cursor.execute("ALTER TABLE printers ADD COLUMN webcam_url TEXT")
+
+                    await cursor.execute(
+                        "INSERT INTO migrations (version, description) VALUES (?, ?)",
+                        ('008', 'Add webcam_url column to printers table')
+                    )
+                    logger.info("Migration 008 completed")
 
                 await self._connection.commit()
                 logger.info("All database migrations completed successfully")
