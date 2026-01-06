@@ -3,6 +3,7 @@ Slicing queue service for managing slicing job execution.
 
 Handles job queuing, execution, progress tracking, and WebSocket updates.
 """
+import os
 import uuid
 import asyncio
 import subprocess
@@ -70,19 +71,35 @@ class SlicingQueue(BaseService):
         self.settings = get_settings()
         self._running_jobs: Dict[str, asyncio.Task] = {}
         self._max_concurrent = 2
-        self._output_dir = Path("/data/printernizer/sliced")
+        # Read from env var first, then settings, then default
+        default_slicing_dir = os.environ.get(
+            "SLICING_OUTPUT_DIR",
+            getattr(self.settings, 'slicing_output_dir', '/data/printernizer/sliced')
+        )
+        self._output_dir = Path(default_slicing_dir)
         self._enabled = True
 
     async def initialize(self) -> None:
         """Initialize service and load settings."""
         await super().initialize()
-        
+
         logger.info("Initializing slicing queue")
-        
-        # Load settings
+
+        # Load settings (database settings override config/env vars)
         self._enabled = await self._get_setting("slicing.enabled", True)
         self._max_concurrent = await self._get_setting("slicing.max_concurrent", 2)
-        output_dir = await self._get_setting("slicing.output_dir", "/data/printernizer/sliced")
+
+        # For slicing output dir, ALWAYS prefer env var if set
+        env_slicing_dir = os.environ.get("SLICING_OUTPUT_DIR")
+        if env_slicing_dir:
+            output_dir = env_slicing_dir
+            logger.info("Using SLICING_OUTPUT_DIR from environment", output_dir=output_dir)
+        else:
+            # Fall back to database setting or config default
+            settings_default = getattr(self.settings, 'slicing_output_dir', '/data/printernizer/sliced')
+            output_dir = await self._get_setting("slicing.output_dir", settings_default)
+            logger.info("Using slicing output dir from settings/default", output_dir=output_dir)
+
         self._output_dir = Path(output_dir)
         
         # Create output directory
@@ -598,18 +615,25 @@ class SlicingQueue(BaseService):
 
     async def _get_setting(self, key: str, default: Any) -> Any:
         """Get setting from database or return default."""
-        async with self.db.connection() as conn:
-            cursor = await conn.execute(
-                "SELECT value, value_type FROM configuration WHERE key = ?",
-                (key,)
-            )
-            row = await cursor.fetchone()
+        try:
+            async with self.db.connection() as conn:
+                cursor = await conn.execute(
+                    "SELECT value, value_type FROM configuration WHERE key = ?",
+                    (key,)
+                )
+                row = await cursor.fetchone()
+        except Exception as e:
+            if "no such table" in str(e).lower():
+                logger.debug(f"Configuration table not found, using default for {key}")
+                return default
+            logger.warning(f"Error reading setting {key}: {e}, using default")
+            return default
 
         if not row:
             return default
 
         value, value_type = row
-        
+
         if value_type == "boolean":
             return value.lower() in ("true", "1", "yes")
         elif value_type == "integer":

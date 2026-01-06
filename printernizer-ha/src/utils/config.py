@@ -8,7 +8,7 @@ import secrets
 from typing import Optional, List
 from pathlib import Path
 from pydantic import Field, validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 import structlog
 
 logger = structlog.get_logger()
@@ -348,6 +348,13 @@ class PrinternizerSettings(BaseSettings):
         description="Path to FlickerFree do_timelapse.sh script for video processing."
     )
 
+    # Slicing Configuration
+    slicing_output_dir: str = Field(
+        default="/data/printernizer/sliced",
+        description="Directory for sliced G-code output files. Will be created if doesn't exist."
+    )
+    # Note: Env var SLICING_OUTPUT_DIR is automatically mapped from field name
+
     # =====================================================================
     # USAGE STATISTICS - Privacy-first telemetry (opt-in only)
     # =====================================================================
@@ -581,10 +588,13 @@ class PrinternizerSettings(BaseSettings):
         """Check if MQTT configuration is available."""
         return self.mqtt_host is not None
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "ignore"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        # Enable case-insensitive env var matching
+        case_sensitive=False,
+    )
 
 
 # Global settings instance
