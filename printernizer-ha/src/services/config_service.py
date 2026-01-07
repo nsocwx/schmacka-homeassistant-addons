@@ -28,8 +28,11 @@ class PrinterConfig:
     api_key: Optional[str] = None
     access_code: Optional[str] = None
     serial_number: Optional[str] = None
+    webcam_url: Optional[str] = None
+    location: Optional[str] = None
+    description: Optional[str] = None
     is_active: bool = True
-    
+
     def __post_init__(self):
         """Validate printer configuration after initialization."""
         self._validate_config()
@@ -56,6 +59,9 @@ class PrinterConfig:
             api_key=config.get('api_key'),
             access_code=config.get('access_code'),
             serial_number=config.get('serial_number'),
+            webcam_url=config.get('webcam_url'),
+            location=config.get('location'),
+            description=config.get('description'),
             is_active=config.get('is_active', True)
         )
         
@@ -73,6 +79,9 @@ class PrinterConfig:
             "api_key": self.api_key,
             "access_code": self.access_code,
             "serial_number": self.serial_number,
+            "webcam_url": self.webcam_url,
+            "location": self.location,
+            "description": self.description,
             "is_active": self.is_active
         }
 
