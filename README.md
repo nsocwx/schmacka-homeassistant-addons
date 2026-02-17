@@ -1,4 +1,4 @@
-# Sebastian's Home Assistant Add-ons
+# NSOCWX's Home Assistant Add-ons
 
 ![Project Stage](https://img.shields.io/badge/project%20stage-✔%20stable-green.svg)
 ![Licence](https://img.shields.io/github/license/schmacka/homeassistant-addons)
