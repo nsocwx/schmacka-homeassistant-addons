@@ -1,0 +1,30 @@
+name: Build rtsp-to-prusa-ha
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "rtsp-to-prusa-ha/**"
+      - ".github/workflows/rtsp-to-prusa-ha.yml"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build & push (multi-arch) with Home Assistant add-on builder
+        uses: home-assistant/builder@master
+        with:
+          args: >
+            --all
+            --target rtsp-to-prusa-ha
+            --docker-hub-check
+            --image "ghcr.io/${{ github.repository_owner }}/rtsp-to-prusa-ha-{arch}"
+        env:
+          DOCKER_USERNAME: ${{ github.actor }}
+          DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
