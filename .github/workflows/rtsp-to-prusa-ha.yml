@@ -17,15 +17,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build & push (multi-arch) with Home Assistant add-on builder
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push Home Assistant add-on image(s)
         uses: home-assistant/builder@master
         with:
           args: >
-            --aarch64
             --amd64
+            --aarch64
             --target rtsp-to-prusa-ha
-            --docker-hub-check
             --image "rtsp-to-prusa-ha-{arch}"
         env:
-          DOCKER_USERNAME: ${{ github.actor }}
-          DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          DOCKER_REGISTRY: ghcr.io
+          DOCKER_REPOSITORY: ${{ github.repository_owner }}
+
