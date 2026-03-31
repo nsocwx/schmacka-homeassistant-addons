@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.30.5] - 2026-03-30
+
+### Changed
+- Version bump to trigger HA add-on update
+
+## [2.30.4] - 2026-03-29
+
+### Fixed
+- Orders feature returns HTTP 500 in Home Assistant: added repair migration (030) that ensures all orders tables (`customers`, `order_sources`, `orders`, `order_files`) and the `jobs.order_id` column exist — previous migrations could fail silently due to the migration runner swallowing `no such table` errors mid-migration, leaving the schema incomplete
+
 ## [2.30.3] - 2026-03-29
 
 ### Fixed
