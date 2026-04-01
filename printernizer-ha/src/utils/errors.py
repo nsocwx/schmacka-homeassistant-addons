@@ -885,7 +885,6 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
         exc_info=True
     )
 
-    # Don't expose internal error details in production
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
