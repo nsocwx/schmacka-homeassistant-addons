@@ -4,11 +4,18 @@
  */
 
 /**
- * Date and Time Formatting (German locale)
+ * Intl locale for date/number formatting, derived from the active UI language
+ */
+function getIntlLocale() {
+    return (typeof i18n !== 'undefined' && i18n.getIntlLocale) ? i18n.getIntlLocale() : 'de-DE';
+}
+
+/**
+ * Date and Time Formatting (locale-aware)
  */
 
 /**
- * Format date with German locale
+ * Format date with the active locale
  */
 function formatDate(dateString, format = 'short') {
     if (!dateString) return '-';
@@ -27,11 +34,11 @@ function formatDate(dateString, format = 'short') {
         options.month = 'long';
     }
     
-    return date.toLocaleDateString('de-DE', options);
+    return date.toLocaleDateString(getIntlLocale(), options);
 }
 
 /**
- * Format time with German locale
+ * Format time with the active locale
  */
 function formatTime(dateString, includeSeconds = false) {
     if (!dateString) return '-';
@@ -48,11 +55,11 @@ function formatTime(dateString, includeSeconds = false) {
         options.second = '2-digit';
     }
     
-    return date.toLocaleTimeString('de-DE', options);
+    return date.toLocaleTimeString(getIntlLocale(), options);
 }
 
 /**
- * Format date and time with German locale
+ * Format date and time with the active locale
  */
 function formatDateTime(dateString, format = 'short') {
     if (!dateString) return '-';
@@ -61,7 +68,7 @@ function formatDateTime(dateString, format = 'short') {
 }
 
 /**
- * Get relative time (German)
+ * Get relative time in the active locale
  */
 function getRelativeTime(dateString) {
     if (!dateString) return '-';
@@ -73,10 +80,10 @@ function getRelativeTime(dateString) {
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
     
-    if (diffMins < 1) return 'gerade eben';
-    if (diffMins < 60) return `vor ${diffMins} Min.`;
-    if (diffHours < 24) return `vor ${diffHours} Std.`;
-    if (diffDays < 7) return `vor ${diffDays} Tag(en)`;
+    if (diffMins < 1) return t('time.justNow');
+    if (diffMins < 60) return t('time.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('time.hoursAgo', { count: diffHours });
+    if (diffDays < 7) return t('time.daysAgo', { count: diffDays });
     
     return formatDate(dateString);
 }
@@ -101,32 +108,32 @@ function formatDuration(seconds) {
 }
 
 /**
- * Number and Currency Formatting (German locale)
+ * Number and Currency Formatting (locale-aware)
  */
 
 /**
- * Format number with German locale
+ * Format number with the active locale
  */
 function formatNumber(number, decimals = 2) {
     if (number === null || number === undefined || isNaN(number)) return '-';
     
-    return new Intl.NumberFormat('de-DE', {
+    return new Intl.NumberFormat(getIntlLocale(), {
         minimumFractionDigits: 0,
         maximumFractionDigits: decimals
     }).format(number);
 }
 
 /**
- * Format currency (EUR) with German locale
+ * Format currency (EUR) with the active locale
  */
 function formatCurrency(amount) {
     if (amount === null || amount === undefined || isNaN(amount)) return '-';
     
-    return new Intl.NumberFormat('de-DE', CONFIG.CURRENCY_FORMAT).format(amount);
+    return new Intl.NumberFormat(getIntlLocale(), CONFIG.CURRENCY_FORMAT).format(amount);
 }
 
 /**
- * Format percentage with German locale
+ * Format percentage with the active locale
  */
 function formatPercentage(value, decimals = 1) {
     if (value === null || value === undefined || isNaN(value)) return '-';
@@ -237,7 +244,7 @@ function validateForm(form) {
         if (!value) {
             errors.push({
                 field: field.name || field.id,
-                message: `${label} ist erforderlich`
+                message: t('common.fieldRequired', { field: label })
             });
             field.classList.add('error');
         } else {
@@ -251,7 +258,7 @@ function validateForm(form) {
         if (field.value && !isValidIP(field.value)) {
             errors.push({
                 field: field.name || field.id,
-                message: 'Ungültige IP-Adresse (Format: xxx.xxx.xxx.xxx)'
+                message: t('printerForm.invalidIpAddress')
             });
             field.classList.add('error');
         }
@@ -263,7 +270,7 @@ function validateForm(form) {
         if (field.value && !isValidPrinterName(field.value)) {
             errors.push({
                 field: field.name || field.id,
-                message: 'Druckername muss 3-50 Zeichen lang sein (Buchstaben, Zahlen, Leerzeichen)'
+                message: t('printerForm.invalidPrinterName')
             });
             field.classList.add('error');
         }
@@ -275,7 +282,7 @@ function validateForm(form) {
         if (field.value && !isValidAccessCode(field.value)) {
             errors.push({
                 field: field.name || field.id,
-                message: 'Access Code muss genau 8 Ziffern enthalten'
+                message: t('printerForm.invalidAccessCode')
             });
             field.classList.add('error');
         }
@@ -287,7 +294,7 @@ function validateForm(form) {
         if (field.value && !isValidSerialNumber(field.value)) {
             errors.push({
                 field: field.name || field.id,
-                message: 'Seriennummer muss 8-20 Zeichen (Buchstaben und Zahlen) enthalten'
+                message: t('printerForm.invalidSerialNumber')
             });
             field.classList.add('error');
         }
@@ -299,7 +306,7 @@ function validateForm(form) {
         if (field.value && !isValidApiKey(field.value)) {
             errors.push({
                 field: field.name || field.id,
-                message: 'API Key muss zwischen 16 und 64 Zeichen lang sein'
+                message: t('printerForm.invalidApiKey')
             });
             field.classList.add('error');
         }
@@ -319,7 +326,7 @@ function getFieldLabel(field) {
     }
     
     // Use placeholder or field name/id as fallback
-    return field.placeholder || field.name || field.id || 'Feld';
+    return field.placeholder || field.name || field.id || t('common.field');
 }
 
 /**
@@ -370,7 +377,7 @@ function setLoadingState(element, loading = true) {
             element.innerHTML = `
                 <div class="loading-placeholder">
                     <div class="spinner"></div>
-                    <p>Laden...</p>
+                    <p>${t('common.loading')}</p>
                 </div>
             `;
         }
@@ -639,10 +646,10 @@ function showSettingsModal(settingsTab, sourcePage) {
     if (modalTitle && sourcePage) {
         modalTitle.innerHTML = `
             <button class="breadcrumb-back" onclick="closeSettingsModal()">
-                ← Zurück zu ${escapeHtml(sourcePage)}
+                ${t('common.backTo', { page: escapeHtml(sourcePage) })}
             </button>
             <span class="breadcrumb-separator">/</span>
-            <span>Einstellungen</span>
+            <span>${t('nav.settings')}</span>
         `;
     }
 
@@ -688,13 +695,13 @@ function updateModalTabSelector(activeTab) {
     if (!tabSelector) return;
 
     const tabs = [
-        { id: 'general', icon: '⚙️', label: 'Allgemein' },
-        { id: 'jobs', icon: '🖨️', label: 'Aufträge & G-Code' },
-        { id: 'library', icon: '🗄️', label: 'Bibliothek' },
-        { id: 'files', icon: '📁', label: 'Uploads & Downloads' },
-        { id: 'timelapse', icon: '🎬', label: 'Timelapse' },
-        { id: 'watch', icon: '👁️', label: 'Überwachung' },
-        { id: 'system', icon: '💻', label: 'System' }
+        { id: 'general', icon: '⚙️', label: t('settings.tabGeneral') },
+        { id: 'jobs', icon: '🖨️', label: t('settings.tabJobs') },
+        { id: 'library', icon: '🗄️', label: t('settings.tabLibrary') },
+        { id: 'files', icon: '📁', label: t('settings.tabFiles') },
+        { id: 'timelapse', icon: '🎬', label: t('settings.tabTimelapse') },
+        { id: 'watch', icon: '👁️', label: t('settings.tabWatch') },
+        { id: 'system', icon: '💻', label: t('settings.tabSystem') }
     ];
 
     const options = tabs.map(tab => {
@@ -765,7 +772,7 @@ function updateSettingsBreadcrumb() {
     if (sourcePage) {
         const backButton = breadcrumb.querySelector('.breadcrumb-back');
         if (backButton) {
-            backButton.innerHTML = `← Zurück zu ${escapeHtml(sourcePage)}`;
+            backButton.innerHTML = t('common.backTo', { page: escapeHtml(sourcePage) });
         }
         breadcrumb.style.display = 'block';
     } else {
@@ -781,7 +788,7 @@ async function saveModalSettings() {
     const currentTab = modal?.dataset.currentTab;
 
     if (!currentTab) {
-        showToast('error', 'Fehler', 'Keine Einstellungen zum Speichern gefunden');
+        showToast('error', t('common.error'), t('settings.nothingToSave'));
         return;
     }
 
@@ -799,28 +806,20 @@ async function saveModalSettings() {
         });
 
         // Save settings via API
-        const response = await fetch(`${CONFIG.API_BASE_URL}/settings`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(settingsData)
-        });
+        await api.updateApplicationSettings(settingsData);
 
-        if (response.ok) {
-            showToast('success', 'Gespeichert', 'Einstellungen wurden erfolgreich gespeichert');
+        showToast('success', t('settings.savedTitle'), t('settings.savedMessage'));
 
-            // Reload settings in main page if needed
-            if (window.settingsManager) {
-                await settingsManager.loadSettings();
-            }
-
-            // Close modal after brief delay
-            setTimeout(() => closeSettingsModal(), 500);
-        } else {
-            throw new Error('Failed to save settings');
+        // Reload settings in main page if needed
+        if (window.settingsManager) {
+            await settingsManager.loadSettings();
         }
+
+        // Close modal after brief delay
+        setTimeout(() => closeSettingsModal(), 500);
     } catch (error) {
         Logger.error('Error saving settings:', error);
-        showToast('error', 'Fehler', 'Einstellungen konnten nicht gespeichert werden');
+        showToast('error', t('common.error'), t('settings.saveFailed'));
     }
 }
 
@@ -860,7 +859,7 @@ async function copyToClipboard(text) {
     try {
         if (navigator.clipboard) {
             await navigator.clipboard.writeText(text);
-            showToast('success', 'Kopiert', 'Text wurde in die Zwischenablage kopiert');
+            showToast('success', t('common.copiedTitle'), t('common.copiedToClipboard'));
         } else {
             // Fallback for older browsers
             const textArea = document.createElement('textarea');
@@ -869,11 +868,11 @@ async function copyToClipboard(text) {
             textArea.select();
             document.execCommand('copy');
             document.body.removeChild(textArea);
-            showToast('success', 'Kopiert', 'Text wurde in die Zwischenablage kopiert');
+            showToast('success', t('common.copiedTitle'), t('common.copiedToClipboard'));
         }
         return true;
     } catch (error) {
-        showToast('error', 'Fehler', 'Text konnte nicht kopiert werden');
+        showToast('error', t('common.error'), t('common.copyFailed'));
         return false;
     }
 }
@@ -900,11 +899,19 @@ function getStatusConfig(type, status) {
         'file': CONFIG.FILE_STATUS
     };
 
-    return configs[type]?.[status] || {
-        label: escapeHtml(status),  // Escape unknown status values for safety
-        icon: '❓',
-        class: 'status-unknown'
-    };
+    const config = configs[type]?.[status];
+    if (!config) {
+        return {
+            label: escapeHtml(status),  // Escape unknown status values for safety
+            icon: '❓',
+            class: 'status-unknown'
+        };
+    }
+
+    // Translated label when available; CONFIG keeps the German fallback
+    const i18nKey = `status.${type}.${status}`;
+    const label = (typeof i18n !== 'undefined' && i18n.has?.(i18nKey)) ? t(i18nKey) : config.label;
+    return { ...config, label };
 }
 
 /**
@@ -1284,14 +1291,14 @@ window.loadAppVersion = loadAppVersion;
  */
 function showNotification(message, type = 'info') {
     // Map type to title
-    const titles = {
-        success: 'Erfolg',
-        error: 'Fehler',
-        warning: 'Warnung',
-        info: 'Information'
+    const titleKeys = {
+        success: 'common.success',
+        error: 'common.error',
+        warning: 'common.warning',
+        info: 'common.info'
     };
 
-    const title = titles[type] || titles.info;
+    const title = t(titleKeys[type] || titleKeys.info);
 
     // Generate a hash of the message for deduplication
     const messageHash = hashString(message);

@@ -14,6 +14,7 @@ const AVAILABLE_PAGES = [
     'materials',
     'ideas',
     'tools',
+    'generator',
     'settings',
     'debug'
 ];
@@ -35,6 +36,7 @@ class PrinternizerApp {
             materials: typeof materialsManager !== 'undefined' ? materialsManager : null,
             ideas: typeof initializeIdeas !== 'undefined' ? { init: initializeIdeas } : null,
             tools: typeof toolsManager !== 'undefined' ? toolsManager : null,
+            generator: typeof generatorManager !== 'undefined' ? generatorManager : null,
             settings: typeof settingsManager !== 'undefined' ? settingsManager : null,
             debug: typeof debugManager !== 'undefined' ? debugManager : null
         };
@@ -235,13 +237,13 @@ class PrinternizerApp {
         // Handle uncaught errors
         window.addEventListener('error', (e) => {
             Logger.error('Global error:', e.error);
-            showToast('error', 'Anwendungsfehler', 'Ein unerwarteter Fehler ist aufgetreten');
+            showToast('error', t('errors.appErrorTitle'), t('errors.appErrorMessage'));
         });
         
         // Handle unhandled promise rejections
         window.addEventListener('unhandledrejection', (e) => {
             Logger.error('Unhandled promise rejection:', e.reason);
-            showToast('error', 'Anwendungsfehler', 'Ein unerwarteter Fehler ist aufgetreten');
+            showToast('error', t('errors.appErrorTitle'), t('errors.appErrorMessage'));
         });
     }
 
@@ -261,7 +263,7 @@ class PrinternizerApp {
             } else {
                 window.printernizer = window.printernizer || {};
                 window.printernizer.backendHealthy = false;
-                showToast('warning', 'System-Warnung', 'System ist möglicherweise nicht voll funktionsfähig', CONFIG.TOAST_DURATION, {
+                showToast('warning', t('errors.systemWarningTitle'), t('errors.systemWarningMessage'), CONFIG.TOAST_DURATION, {
                     uniqueKey: CONFIG.NOTIFICATION_KEYS.SYSTEM_WARNING,
                     deduplicateMode: 'update'
                 });
@@ -270,7 +272,7 @@ class PrinternizerApp {
             Logger.error('Health check failed:', error);
             window.printernizer = window.printernizer || {};
             window.printernizer.backendHealthy = false;
-            showToast('error', 'Verbindungsfehler', 'Backend-Server ist nicht erreichbar', CONFIG.TOAST_DURATION, {
+            showToast('error', t('errors.backendOfflineTitle'), t('errors.backendOfflineMessage'), CONFIG.TOAST_DURATION, {
                 uniqueKey: CONFIG.NOTIFICATION_KEYS.BACKEND_OFFLINE,
                 deduplicateMode: 'update'
             });
@@ -434,8 +436,17 @@ function setupKeyboardShortcuts() {
 /**
  * Application initialization
  */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     Logger.debug('DOM loaded, initializing application...');
+
+    // Load translations before any page renders (falls back to inline text)
+    if (window.i18n) {
+        await i18n.init();
+        const languageSelector = document.getElementById('languageSelector');
+        if (languageSelector) {
+            languageSelector.value = i18n.getLocale();
+        }
+    }
 
     // Create global app instance
     window.app = new PrinternizerApp();
@@ -458,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show welcome message
     setTimeout(() => {
-        showToast('info', 'Willkommen', 'Printernizer wurde erfolgreich geladen', CONFIG.TOAST_DURATION, {
+        showToast('info', t('common.welcomeTitle'), t('common.welcomeMessage'), CONFIG.TOAST_DURATION, {
             uniqueKey: CONFIG.NOTIFICATION_KEYS.APP_WELCOME,
             deduplicateMode: 'prevent' // Don't show duplicate welcome messages
         });

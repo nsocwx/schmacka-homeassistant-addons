@@ -33,7 +33,7 @@ class UsageStatisticsManager {
      */
     async loadStatus() {
         try {
-            const response = await fetch('/api/v1/usage-stats/status');
+            const response = await fetch(`${CONFIG.API_BASE_URL}/usage-stats/status`);
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
@@ -51,7 +51,7 @@ class UsageStatisticsManager {
             Logger.debug('Usage statistics status loaded', status);
         } catch (error) {
             Logger.error('Failed to load usage statistics status:', error);
-            this.showMessage('Fehler beim Laden des Status', 'alert-danger');
+            this.showMessage(t('usageStats.loadStatusError'), 'alert-danger');
         }
     }
 
@@ -67,12 +67,12 @@ class UsageStatisticsManager {
 
             if (shouldOptIn) {
                 // Opt in
-                response = await fetch('/api/v1/usage-stats/opt-in', {
+                response = await fetch(`${CONFIG.API_BASE_URL}/usage-stats/opt-in`, {
                     method: 'POST'
                 });
             } else {
                 // Opt out
-                response = await fetch('/api/v1/usage-stats/opt-out', {
+                response = await fetch(`${CONFIG.API_BASE_URL}/usage-stats/opt-out`, {
                     method: 'POST'
                 });
             }
@@ -104,7 +104,9 @@ class UsageStatisticsManager {
             checkbox.checked = !shouldOptIn;
 
             this.showMessage(
-                `Fehler beim ${shouldOptIn ? 'Aktivieren' : 'Deaktivieren'}: ${error.message}`,
+                shouldOptIn
+                    ? t('usageStats.enableError', { message: error.message })
+                    : t('usageStats.disableError', { message: error.message }),
                 'alert-danger'
             );
         }
@@ -125,11 +127,11 @@ class UsageStatisticsManager {
             container.innerHTML = `
                 <div class="loading-placeholder">
                     <div class="spinner"></div>
-                    <p>Lade Statistiken...</p>
+                    <p>${t('usageStats.loadingStats')}</p>
                 </div>
             `;
 
-            const response = await fetch('/api/v1/usage-stats/local');
+            const response = await fetch(`${CONFIG.API_BASE_URL}/usage-stats/local`);
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
@@ -148,7 +150,7 @@ class UsageStatisticsManager {
 
             container.innerHTML = `
                 <div class="alert alert-danger">
-                    <strong>Fehler:</strong> Statistiken konnten nicht geladen werden.
+                    <strong>${t('common.error')}:</strong> ${t('usageStats.statsLoadError')}
                     <br><small>${error.message}</small>
                 </div>
             `;
@@ -167,60 +169,60 @@ class UsageStatisticsManager {
 
         const firstSeen = stats.first_seen
             ? new Date(stats.first_seen).toLocaleDateString('de-DE')
-            : 'Nie';
+            : t('usageStats.never');
 
         const lastSubmission = stats.last_submission
             ? new Date(stats.last_submission).toLocaleDateString('de-DE')
-            : 'Nie';
+            : t('usageStats.never');
 
         container.innerHTML = `
             <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
                 <div class="stat-card">
-                    <div class="stat-label">Installations-ID</div>
+                    <div class="stat-label">${t('usageStats.installationId')}</div>
                     <div class="stat-value" style="font-size: 0.9rem; font-family: monospace; word-break: break-all;">
                         ${stats.installation_id}
                     </div>
-                    <small class="text-muted">Anonyme Kennung</small>
+                    <small class="text-muted">${t('usageStats.anonymousId')}</small>
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-label">Erste Nutzung</div>
+                    <div class="stat-label">${t('usageStats.firstUse')}</div>
                     <div class="stat-value">${firstSeen}</div>
-                    <small class="text-muted">Erste aufgezeichnete Aktivität</small>
+                    <small class="text-muted">${t('usageStats.firstRecordedActivity')}</small>
                 </div>
 
                 <div class="stat-card">
                     <div class="stat-label">Status</div>
                     <div class="stat-value">
                         <span class="status-badge ${stats.opt_in_status === 'enabled' ? 'badge-success' : 'badge-secondary'}">
-                            ${stats.opt_in_status === 'enabled' ? '✓ Aktiv' : '○ Inaktiv'}
+                            ${stats.opt_in_status === 'enabled' ? `✓ ${t('usageStats.active')}` : `○ ${t('usageStats.inactive')}`}
                         </span>
                     </div>
-                    <small class="text-muted">Übermittlungs-Status</small>
+                    <small class="text-muted">${t('usageStats.submissionStatus')}</small>
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-label">Gesammelte Events</div>
+                    <div class="stat-label">${t('usageStats.collectedEvents')}</div>
                     <div class="stat-value">${stats.total_events.toLocaleString('de-DE')}</div>
-                    <small class="text-muted">Lokale Ereignisse</small>
+                    <small class="text-muted">${t('usageStats.localEvents')}</small>
                 </div>
             </div>
 
             <div class="stats-section" style="margin-top: 20px;">
-                <h4 style="font-size: 1rem; margin-bottom: 15px;">Diese Woche</h4>
+                <h4 style="font-size: 1rem; margin-bottom: 15px;">${t('usageStats.thisWeek')}</h4>
                 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                     <div class="stat-card">
-                        <div class="stat-label">Druckaufträge</div>
+                        <div class="stat-label">${t('usageStats.printJobs')}</div>
                         <div class="stat-value">${(stats.this_week.job_count || 0).toLocaleString('de-DE')}</div>
                     </div>
 
                     <div class="stat-card">
-                        <div class="stat-label">Datei-Downloads</div>
+                        <div class="stat-label">${t('usageStats.fileDownloads')}</div>
                         <div class="stat-value">${(stats.this_week.file_count || 0).toLocaleString('de-DE')}</div>
                     </div>
 
                     <div class="stat-card">
-                        <div class="stat-label">Fehler</div>
+                        <div class="stat-label">${t('usageStats.errors')}</div>
                         <div class="stat-value">${(stats.this_week.error_count || 0).toLocaleString('de-DE')}</div>
                     </div>
                 </div>
@@ -228,8 +230,8 @@ class UsageStatisticsManager {
 
             <div class="stats-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
                 <div class="stat-info">
-                    <strong>Letzte Übermittlung:</strong> ${lastSubmission}
-                    ${stats.opt_in_status === 'disabled' ? '<br><small class="text-muted">Übermittlung ist deaktiviert. Daten werden nur lokal gespeichert.</small>' : ''}
+                    <strong>${t('usageStats.lastSubmission')}:</strong> ${lastSubmission}
+                    ${stats.opt_in_status === 'disabled' ? `<br><small class="text-muted">${t('usageStats.submissionDisabled')}</small>` : ''}
                 </div>
             </div>
         `;
@@ -242,7 +244,7 @@ class UsageStatisticsManager {
         try {
             Logger.info('Exporting usage statistics...');
 
-            const response = await fetch('/api/v1/usage-stats/export');
+            const response = await fetch(`${CONFIG.API_BASE_URL}/usage-stats/export`);
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
@@ -259,13 +261,13 @@ class UsageStatisticsManager {
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
 
-            this.showMessage('Statistiken erfolgreich exportiert', 'alert-success');
+            this.showMessage(t('usageStats.exportSuccess'), 'alert-success');
 
             Logger.info('Usage statistics exported successfully');
 
         } catch (error) {
             Logger.error('Failed to export usage statistics:', error);
-            this.showMessage(`Fehler beim Exportieren: ${error.message}`, 'alert-danger');
+            this.showMessage(t('usageStats.exportError', { message: error.message }), 'alert-danger');
         }
     }
 
@@ -274,18 +276,14 @@ class UsageStatisticsManager {
      */
     async deleteAllData() {
         // Confirm deletion
-        if (!confirm(
-            'Möchten Sie wirklich alle lokalen Nutzungsstatistiken löschen?\n\n' +
-            'Diese Aktion kann nicht rückgängig gemacht werden. ' +
-            'Falls Sie Daten bereits übermittelt haben, bleiben diese auf dem Server gespeichert.'
-        )) {
+        if (!confirm(t('usageStats.deleteConfirm'))) {
             return;
         }
 
         try {
             Logger.info('Deleting all usage statistics...');
 
-            const response = await fetch('/api/v1/usage-stats', {
+            const response = await fetch(`${CONFIG.API_BASE_URL}/usage-stats`, {
                 method: 'DELETE'
             });
 
@@ -297,7 +295,7 @@ class UsageStatisticsManager {
 
             if (result.success) {
                 this.showMessage(
-                    `Alle lokalen Statistiken gelöscht (${result.deleted_events} Events)`,
+                    t('usageStats.deleteSuccess', { count: result.deleted_events }),
                     'alert-success'
                 );
 
@@ -311,7 +309,7 @@ class UsageStatisticsManager {
 
         } catch (error) {
             Logger.error('Failed to delete usage statistics:', error);
-            this.showMessage(`Fehler beim Löschen: ${error.message}`, 'alert-danger');
+            this.showMessage(t('usageStats.deleteError', { message: error.message }), 'alert-danger');
         }
     }
 

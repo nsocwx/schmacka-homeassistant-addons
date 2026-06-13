@@ -146,8 +146,8 @@ class PrinterManager {
         // Connection type indicator
         const connectionType = printer.connection_type || (printer.printer_type === 'bambu_lab' ? 'MQTT' : 'HTTP');
         const connectionIndicator = isConnecting
-            ? `<span class="connection-indicator connecting" title="Verbindung wird hergestellt...">⟳ ${connectionType}</span>`
-            : `<span class="connection-indicator ${printer.status === 'online' || printer.status === 'printing' ? 'connected' : 'disconnected'}" title="${connectionType}-Verbindung">${connectionType}</span>`;
+            ? `<span class="connection-indicator connecting" title="${t('printers.connectionEstablishing')}">⟳ ${connectionType}</span>`
+            : `<span class="connection-indicator ${printer.status === 'online' || printer.status === 'printing' ? 'connected' : 'disconnected'}" title="${t('printers.connectionType', { type: connectionType })}">${connectionType}</span>`;
 
         card.innerHTML = `
             <div class="printer-tile-header">
@@ -177,14 +177,14 @@ class PrinterManager {
 
             <div class="printer-tile-footer">
                 <div class="printer-tile-actions">
-                    <button class="btn-icon" onclick="printerManager.showPrinterDetails('${sanitizeAttribute(printer.id)}')" title="Details anzeigen">
+                    <button class="btn-icon" onclick="printerManager.showPrinterDetails('${sanitizeAttribute(printer.id)}')" title="${t('printers.showDetails')}">
                         👁️
                     </button>
-                    <button class="btn-icon" onclick="printerManager.editPrinter('${sanitizeAttribute(printer.id)}')" title="Bearbeiten">
+                    <button class="btn-icon" onclick="printerManager.editPrinter('${sanitizeAttribute(printer.id)}')" title="${t('common.edit')}">
                         ✏️
                     </button>
                     ${this.renderTilePrinterControls(printer)}
-                    <button class="btn-icon btn-error-icon" onclick="printerManager.deletePrinter('${sanitizeAttribute(printer.id)}')" title="Löschen">
+                    <button class="btn-icon btn-error-icon" onclick="printerManager.deletePrinter('${sanitizeAttribute(printer.id)}')" title="${t('common.delete')}">
                         🗑️
                     </button>
                 </div>
@@ -199,7 +199,7 @@ class PrinterManager {
      */
     renderTileCurrentJob(printer) {
         if (!printer.current_job) {
-            return '<div class="printer-tile-idle"><span class="text-muted">Bereit</span></div>';
+            return `<div class="printer-tile-idle"><span class="text-muted">${t('status.printer.idle')}</span></div>`;
         }
 
         const jobName = typeof printer.current_job === 'string' ? printer.current_job : printer.current_job.name;
@@ -217,7 +217,7 @@ class PrinterManager {
                 ` : ''}
                 ${printer.remaining_time_minutes ? `
                     <div class="tile-time-remaining">
-                        ⏱️ ${formatDuration(printer.remaining_time_minutes * 60)} verbleibend
+                        ⏱️ ${t('printers.timeRemaining', { time: formatDuration(printer.remaining_time_minutes * 60) })}
                     </div>
                 ` : ''}
             </div>
@@ -232,8 +232,8 @@ class PrinterManager {
         if (!temperatures) {
             return `
                 <div class="printer-tile-temps printer-tile-temps-placeholder">
-                    <span class="tile-temp text-muted" title="Düse">🔥 --°C</span>
-                    <span class="tile-temp text-muted" title="Druckbett">🛏️ --°C</span>
+                    <span class="tile-temp text-muted" title="${t('printers.nozzle')}">🔥 --°C</span>
+                    <span class="tile-temp text-muted" title="${t('printers.printBed')}">🛏️ --°C</span>
                 </div>
             `;
         }
@@ -242,19 +242,19 @@ class PrinterManager {
 
         if (temperatures.nozzle !== undefined) {
             const nozzle = typeof temperatures.nozzle === 'object' ? temperatures.nozzle : { current: temperatures.nozzle };
-            tempItems.push(`<span class="tile-temp" title="Düse">🔥 ${parseFloat(nozzle.current).toFixed(0)}°C</span>`);
+            tempItems.push(`<span class="tile-temp" title="${t('printers.nozzle')}">🔥 ${parseFloat(nozzle.current).toFixed(0)}°C</span>`);
         }
 
         if (temperatures.bed !== undefined) {
             const bed = typeof temperatures.bed === 'object' ? temperatures.bed : { current: temperatures.bed };
-            tempItems.push(`<span class="tile-temp" title="Druckbett">🛏️ ${parseFloat(bed.current).toFixed(0)}°C</span>`);
+            tempItems.push(`<span class="tile-temp" title="${t('printers.printBed')}">🛏️ ${parseFloat(bed.current).toFixed(0)}°C</span>`);
         }
 
         if (tempItems.length === 0) {
             return `
                 <div class="printer-tile-temps printer-tile-temps-placeholder">
-                    <span class="tile-temp text-muted" title="Düse">🔥 --°C</span>
-                    <span class="tile-temp text-muted" title="Druckbett">🛏️ --°C</span>
+                    <span class="tile-temp text-muted" title="${t('printers.nozzle')}">🔥 --°C</span>
+                    <span class="tile-temp text-muted" title="${t('printers.printBed')}">🛏️ --°C</span>
                 </div>
             `;
         }
@@ -281,7 +281,7 @@ class PrinterManager {
             const isActive = filament.is_active;
 
             return `
-                <div class="filament-item ${isActive ? 'filament-active' : ''}" data-slot="${filament.slot}" title="Slot ${slotLabel}: ${filamentType}">
+                <div class="filament-item ${isActive ? 'filament-active' : ''}" data-slot="${filament.slot}" title="${t('printers.slotTitle', { slot: slotLabel, type: filamentType })}">
                     <div class="filament-color" style="background-color: ${escapeHtml(filamentColor)}"></div>
                     <div class="filament-info">
                         <span class="filament-slot">${slotLabel}</span>
@@ -294,7 +294,7 @@ class PrinterManager {
         return `
             <div class="filaments">
                 <div class="filaments-header">
-                    <span class="filaments-label">Filamente</span>
+                    <span class="filaments-label">${t('printers.filaments')}</span>
                 </div>
                 <div class="filaments-list">
                     ${filamentItems}
@@ -307,17 +307,17 @@ class PrinterManager {
      * Render statistics for tile layout
      */
     renderTileStatistics(statistics) {
-        if (!statistics) return '<span class="text-muted">Keine Statistiken</span>';
+        if (!statistics) return `<span class="text-muted">${t('printers.noStatistics')}</span>`;
 
         const stats = [];
 
         if (statistics.total_jobs !== undefined) {
-            stats.push(`<span class="tile-stat" title="Gesamte Aufträge">📊 ${statistics.total_jobs}</span>`);
+            stats.push(`<span class="tile-stat" title="${t('printers.totalJobs')}">📊 ${statistics.total_jobs}</span>`);
         }
 
         if (statistics.success_rate !== undefined) {
             const rate = (statistics.success_rate * 100).toFixed(0);
-            stats.push(`<span class="tile-stat" title="Erfolgsrate">✓ ${rate}%</span>`);
+            stats.push(`<span class="tile-stat" title="${t('printers.successRate')}">✓ ${rate}%</span>`);
         }
 
         if (stats.length === 0) return '<span class="text-muted">-</span>';
@@ -331,19 +331,19 @@ class PrinterManager {
     renderTilePrinterControls(printer) {
         if (printer.status === 'printing') {
             return `
-                <button class="btn-icon" onclick="printerManager.pausePrinter('${printer.id}')" title="Pausieren">
+                <button class="btn-icon" onclick="printerManager.pausePrinter('${printer.id}')" title="${t('printers.pause')}">
                     ⏸️
                 </button>
-                <button class="btn-icon btn-error-icon" onclick="printerManager.stopPrinter('${printer.id}')" title="Stoppen">
+                <button class="btn-icon btn-error-icon" onclick="printerManager.stopPrinter('${printer.id}')" title="${t('printers.stop')}">
                     ⏹️
                 </button>
             `;
         } else if (printer.status === 'paused') {
             return `
-                <button class="btn-icon" onclick="printerManager.resumePrinter('${printer.id}')" title="Fortsetzen">
+                <button class="btn-icon" onclick="printerManager.resumePrinter('${printer.id}')" title="${t('printers.resume')}">
                     ▶️
                 </button>
-                <button class="btn-icon btn-error-icon" onclick="printerManager.stopPrinter('${printer.id}')" title="Stoppen">
+                <button class="btn-icon btn-error-icon" onclick="printerManager.stopPrinter('${printer.id}')" title="${t('printers.stop')}">
                     ⏹️
                 </button>
             `;
@@ -364,7 +364,7 @@ class PrinterManager {
      */
     renderCurrentJobInfo(printer) {
         if (!printer.current_job) {
-            return '<div class="info-item"><span class="text-muted">Kein aktiver Auftrag</span></div>';
+            return `<div class="info-item"><span class="text-muted">${t('printers.noActiveJob')}</span></div>`;
         }
 
         // Handle both old job object structure and new string job name structure
@@ -375,7 +375,7 @@ class PrinterManager {
         return `
             <div class="current-job-info">
                 <div class="info-item">
-                    <label>Aktueller Auftrag:</label>
+                    <label>${t('printers.currentJob')}:</label>
                     <span>${escapeHtml(jobName)}</span>
                 </div>
                 ${this.renderJobThumbnail(printer)}
@@ -385,7 +385,7 @@ class PrinterManager {
                 </div>
                 ${printer.progress !== undefined ? `
                     <div class="info-item">
-                        <label>Fortschritt:</label>
+                        <label>${t('printers.progress')}:</label>
                         <div class="inline-progress">
                             <div class="progress">
                                 <div class="progress-bar" style="width: ${printer.progress}%"></div>
@@ -396,13 +396,13 @@ class PrinterManager {
                 ` : ''}
                 ${printer.remaining_time_minutes ? `
                     <div class="info-item">
-                        <label>Verbleibend:</label>
+                        <label>${t('printers.remaining')}:</label>
                         <span>${formatDuration(printer.remaining_time_minutes * 60)}</span>
                     </div>
                 ` : ''}
                 ${printer.estimated_end_time ? `
                     <div class="info-item">
-                        <label>Ende:</label>
+                        <label>${t('printers.end')}:</label>
                         <span>${formatTime(printer.estimated_end_time)}</span>
                     </div>
                 ` : ''}
@@ -419,11 +419,11 @@ class PrinterManager {
             // Show camera unavailable placeholder
             return `
                 <div class="info-item">
-                    <label>Vorschau:</label>
+                    <label>${t('printers.preview')}:</label>
                     <div class="job-thumbnail-info thumbnail-unavailable">
                         <div class="camera-placeholder">
                             <span class="camera-icon">📷</span>
-                            <span class="camera-text">Keine Vorschau</span>
+                            <span class="camera-text">${t('printers.noPreview')}</span>
                         </div>
                     </div>
                 </div>
@@ -432,20 +432,20 @@ class PrinterManager {
 
         // Determine thumbnail source
         const thumbnailSrc = printer.current_job_has_thumbnail
-            ? `/api/v1/files/${printer.current_job_file_id}/thumbnail`
+            ? `${CONFIG.API_BASE_URL}/files/${printer.current_job_file_id}/thumbnail`
             : 'assets/placeholder-thumbnail.svg';
 
         return `
             <div class="info-item">
-                <label>Vorschau:</label>
+                <label>${t('printers.preview')}:</label>
                 <div class="job-thumbnail-info">
                     <img src="${thumbnailSrc}"
-                         alt="${printer.current_job_has_thumbnail ? 'Job Thumbnail' : 'Keine Vorschau verfügbar'}"
+                         alt="${printer.current_job_has_thumbnail ? 'Job Thumbnail' : t('printers.noPreviewAvailable')}"
                          class="thumbnail-image-small ${!printer.current_job_has_thumbnail ? 'placeholder-image' : ''}"
                          data-file-id="${printer.current_job_file_id}"
                          loading="lazy"
                          onclick="showFullThumbnail('${printer.current_job_file_id}', '${escapeHtml(printer.current_job || 'Current Job')}')"
-                         ${printer.current_job_has_thumbnail ? "onerror=\"this.onerror=null; this.parentElement.innerHTML='<div class=\\'camera-placeholder\\'><span class=\\'camera-icon\\'>📷</span><span class=\\'camera-text\\'>Bild nicht verfügbar</span></div>';\"" : ''}>
+                         ${printer.current_job_has_thumbnail ? `onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'camera-placeholder\\'><span class=\\'camera-icon\\'>📷</span><span class=\\'camera-text\\'>${t('printers.imageUnavailable')}</span></div>';"` : ''}>
                 </div>
             </div>
         `;
@@ -465,7 +465,7 @@ class PrinterManager {
             const nozzle = typeof temperatures.nozzle === 'object' ? temperatures.nozzle : { current: temperatures.nozzle };
             tempItems.push(`
                 <div class="info-item">
-                    <label>Düse:</label>
+                    <label>${t('printers.nozzle')}:</label>
                     <span class="temperature ${Math.abs(nozzle.current - (nozzle.target || 0)) > 2 ? 'temp-heating' : ''}">
                         ${parseFloat(nozzle.current).toFixed(1)}°C${nozzle.target ? ` / ${parseFloat(nozzle.target).toFixed(1)}°C` : ''}
                     </span>
@@ -477,7 +477,7 @@ class PrinterManager {
             const bed = typeof temperatures.bed === 'object' ? temperatures.bed : { current: temperatures.bed };
             tempItems.push(`
                 <div class="info-item">
-                    <label>Bett:</label>
+                    <label>${t('printers.bed')}:</label>
                     <span class="temperature ${Math.abs(bed.current - (bed.target || 0)) > 2 ? 'temp-heating' : ''}">
                         ${parseFloat(bed.current).toFixed(1)}°C${bed.target ? ` / ${parseFloat(bed.target).toFixed(1)}°C` : ''}
                     </span>
@@ -489,7 +489,7 @@ class PrinterManager {
             const chamber = typeof temperatures.chamber === 'object' ? temperatures.chamber : { current: temperatures.chamber };
             tempItems.push(`
                 <div class="info-item">
-                    <label>Kammer:</label>
+                    <label>${t('printers.chamber')}:</label>
                     <span class="temperature">${parseFloat(chamber.current).toFixed(1)}°C</span>
                 </div>
             `);
@@ -503,16 +503,16 @@ class PrinterManager {
      */
     renderPrinterStatistics(statistics) {
         if (!statistics) {
-            return '<div class="info-item"><span class="text-muted">Keine Statistiken verfügbar</span></div>';
+            return `<div class="info-item"><span class="text-muted">${t('printers.noStatisticsAvailable')}</span></div>`;
         }
-        
+
         return `
             <div class="info-item">
-                <label>Aufträge:</label>
-                <span>${statistics.total_jobs} (${formatPercentage(statistics.success_rate * 100)} Erfolg)</span>
+                <label>${t('printers.jobs')}:</label>
+                <span>${t('printers.jobsSuccess', { count: statistics.total_jobs, rate: formatPercentage(statistics.success_rate * 100) })}</span>
             </div>
             <div class="info-item">
-                <label>Druckzeit:</label>
+                <label>${t('printers.printTime')}:</label>
                 <span>${formatDuration(statistics.total_print_time)}</span>
             </div>
             <div class="info-item">
@@ -530,9 +530,9 @@ class PrinterManager {
         
         // Test connection
         buttons.push(`
-            <button class="btn btn-sm btn-secondary" onclick="printerManager.testConnection('${printer.id}')" title="Verbindung testen">
+            <button class="btn btn-sm btn-secondary" onclick="printerManager.testConnection('${printer.id}')" title="${t('printers.testConnection')}">
                 <span class="btn-icon">🔌</span>
-                Verbindung testen
+                ${t('printers.testConnection')}
             </button>
         `);
         
@@ -540,46 +540,46 @@ class PrinterManager {
         if (printer.status === 'printing') {
             // Show pause and stop buttons when printing
             buttons.push(`
-                <button class="btn btn-sm btn-warning" onclick="printerManager.pausePrint('${printer.id}')" title="Druck pausieren">
+                <button class="btn btn-sm btn-warning" onclick="printerManager.pausePrint('${printer.id}')" title="${t('printers.pausePrint')}">
                     <span class="btn-icon">⏸️</span>
-                    Pausieren
+                    ${t('printers.pause')}
                 </button>
-                <button class="btn btn-sm btn-error" onclick="printerManager.stopPrint('${printer.id}')" title="Druck stoppen">
+                <button class="btn btn-sm btn-error" onclick="printerManager.stopPrint('${printer.id}')" title="${t('printers.stopPrint')}">
                     <span class="btn-icon">⏹️</span>
-                    Stoppen
+                    ${t('printers.stop')}
                 </button>
-                <button class="btn btn-sm btn-secondary" onclick="printerManager.downloadCurrentJob('${printer.id}')" title="Aktuelle Druckdatei herunterladen & Thumbnail verarbeiten">
+                <button class="btn btn-sm btn-secondary" onclick="printerManager.downloadCurrentJob('${printer.id}')" title="${t('printers.downloadCurrentJobTitle')}">
                     <span class="btn-icon">🖼️</span>
-                    Thumbnail holen
+                    ${t('printers.fetchThumbnail')}
                 </button>
             `);
         } else if (printer.status === 'paused') {
             // Show resume and stop buttons when paused
             buttons.push(`
-                <button class="btn btn-sm btn-success" onclick="printerManager.resumePrint('${printer.id}')" title="Druck fortsetzen">
+                <button class="btn btn-sm btn-success" onclick="printerManager.resumePrint('${printer.id}')" title="${t('printers.resumePrint')}">
                     <span class="btn-icon">▶️</span>
-                    Fortsetzen
+                    ${t('printers.resume')}
                 </button>
-                <button class="btn btn-sm btn-error" onclick="printerManager.stopPrint('${printer.id}')" title="Druck stoppen">
+                <button class="btn btn-sm btn-error" onclick="printerManager.stopPrint('${printer.id}')" title="${t('printers.stopPrint')}">
                     <span class="btn-icon">⏹️</span>
-                    Stoppen
+                    ${t('printers.stop')}
                 </button>
             `);
         } else if (printer.status === 'online') {
             // Show generic control button when online but not printing
             buttons.push(`
-                <button class="btn btn-sm btn-secondary" onclick="printerManager.showPrinterControl('${printer.id}')" title="Drucker steuern">
+                <button class="btn btn-sm btn-secondary" onclick="printerManager.showPrinterControl('${printer.id}')" title="${t('printers.controlPrinter')}">
                     <span class="btn-icon">🎮</span>
-                    Steuern
+                    ${t('printers.control')}
                 </button>
             `);
         }
         
         // View statistics
         buttons.push(`
-            <button class="btn btn-sm btn-secondary" onclick="printerManager.showStatistics('${printer.id}')" title="Statistiken anzeigen">
+            <button class="btn btn-sm btn-secondary" onclick="printerManager.showStatistics('${printer.id}')" title="${t('printers.showStatistics')}">
                 <span class="btn-icon">📊</span>
-                Statistiken
+                ${t('printers.statistics')}
             </button>
         `);
         
@@ -593,11 +593,11 @@ class PrinterManager {
         return `
             <div class="empty-state">
                 <div class="empty-state-icon">🖨️</div>
-                <h3>Keine Drucker konfiguriert</h3>
-                <p>Fügen Sie Ihren ersten Drucker hinzu, um mit der Verwaltung zu beginnen.</p>
+                <h3>${t('printers.noneConfigured')}</h3>
+                <p>${t('printers.addFirstPrinter')}</p>
                 <button class="btn btn-primary" onclick="showAddPrinter()">
                     <span class="btn-icon">➕</span>
-                    Drucker hinzufügen
+                    ${t('printers.addPrinter')}
                 </button>
             </div>
         `;
@@ -607,16 +607,16 @@ class PrinterManager {
      * Render printers error state
      */
     renderPrintersError(error) {
-        const message = error instanceof ApiError ? error.getUserMessage() : 'Fehler beim Laden der Drucker';
-        
+        const message = error instanceof ApiError ? error.getUserMessage() : t('printers.loadFailed');
+
         return `
             <div class="empty-state">
                 <div class="empty-state-icon">⚠️</div>
-                <h3>Ladefehler</h3>
+                <h3>${t('printers.loadError')}</h3>
                 <p>${escapeHtml(message)}</p>
                 <button class="btn btn-primary" onclick="printerManager.loadPrinters()">
                     <span class="btn-icon">🔄</span>
-                    Erneut versuchen
+                    ${t('common.retry')}
                 </button>
             </div>
         `;
@@ -665,7 +665,7 @@ class PrinterManager {
 
         } catch (error) {
             Logger.error('Failed to load printer details:', error);
-            showToast('error', 'Fehler', 'Drucker-Details konnten nicht geladen werden');
+            showToast('error', t('common.error'), t('printers.detailsLoadFailed'));
         }
     }
 
@@ -684,7 +684,7 @@ class PrinterManager {
         const { printer, connection, statistics, recent_jobs, current_status } = data;
 
         const statusIcon = this.getStatusIcon(printer.status);
-        const connectionStatus = connection.is_connected ? '🟢 Verbunden' : '🔴 Getrennt';
+        const connectionStatus = connection.is_connected ? `🟢 ${t('printers.connected')}` : `🔴 ${t('printers.disconnected')}`;
         const isPrinting = printer.status === 'printing';
         const isPaused = printer.status === 'paused';
         const canControl = connection.is_connected && (isPrinting || isPaused);
@@ -702,10 +702,10 @@ class PrinterManager {
 
                     <!-- Tab Navigation -->
                     <div class="modal-tabs">
-                        <button class="tab-btn active" data-tab="overview">📊 Übersicht</button>
+                        <button class="tab-btn active" data-tab="overview">📊 ${t('printers.tabOverview')}</button>
                         <button class="tab-btn" data-tab="status">⚡ Status</button>
-                        <button class="tab-btn" data-tab="history">📜 Verlauf</button>
-                        <button class="tab-btn" data-tab="diagnostics">🔧 Diagnose</button>
+                        <button class="tab-btn" data-tab="history">📜 ${t('printers.tabHistory')}</button>
+                        <button class="tab-btn" data-tab="diagnostics">🔧 ${t('printers.tabDiagnostics')}</button>
                     </div>
 
                     <div class="modal-body">
@@ -715,71 +715,71 @@ class PrinterManager {
                             <div class="stats-grid stats-grid-4">
                                 <div class="stat-card-small">
                                     <div class="stat-value">${statistics.total_jobs}</div>
-                                    <div class="stat-label">Aufträge gesamt</div>
+                                    <div class="stat-label">${t('printers.jobsTotal')}</div>
                                 </div>
                                 <div class="stat-card-small stat-success">
                                     <div class="stat-value">${statistics.success_rate}%</div>
-                                    <div class="stat-label">Erfolgsrate</div>
+                                    <div class="stat-label">${t('printers.successRate')}</div>
                                 </div>
                                 <div class="stat-card-small">
                                     <div class="stat-value">${statistics.total_print_time_hours}h</div>
-                                    <div class="stat-label">Druckzeit</div>
+                                    <div class="stat-label">${t('printers.printTime')}</div>
                                 </div>
                                 <div class="stat-card-small">
                                     <div class="stat-value">${statistics.total_material_kg}kg</div>
-                                    <div class="stat-label">Material verbraucht</div>
+                                    <div class="stat-label">${t('printers.materialUsed')}</div>
                                 </div>
                             </div>
 
                             <!-- Printer Info Grid -->
                             <div class="details-section">
-                                <h3>📋 Druckerinformationen</h3>
+                                <h3>📋 ${t('printers.printerInformation')}</h3>
                                 <div class="details-grid details-grid-2">
                                     <div class="detail-item">
                                         <span class="detail-label">Status</span>
                                         <span class="detail-value status-badge status-${printer.status}">${this.formatStatus(printer.status)}</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">Standort</span>
+                                        <span class="detail-label">${t('printers.location')}</span>
                                         <span class="detail-value">${escapeHtml(printer.location) || '-'}</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">Beschreibung</span>
+                                        <span class="detail-label">${t('printers.description')}</span>
                                         <span class="detail-value">${escapeHtml(printer.description) || '-'}</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">Aktiviert</span>
-                                        <span class="detail-value">${printer.is_enabled ? '✅ Ja' : '❌ Nein'}</span>
+                                        <span class="detail-label">${t('printers.enabled')}</span>
+                                        <span class="detail-value">${printer.is_enabled ? `✅ ${t('common.yes')}` : `❌ ${t('common.no')}`}</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">Erstellt</span>
-                                        <span class="detail-value">${printer.created_at ? new Date(printer.created_at).toLocaleDateString('de-DE') : '-'}</span>
+                                        <span class="detail-label">${t('printers.created')}</span>
+                                        <span class="detail-value">${printer.created_at ? new Date(printer.created_at).toLocaleDateString(getIntlLocale()) : '-'}</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">Letzte Aktivität</span>
-                                        <span class="detail-value">${printer.last_seen ? new Date(printer.last_seen).toLocaleString('de-DE') : '-'}</span>
+                                        <span class="detail-label">${t('printers.lastActivity')}</span>
+                                        <span class="detail-value">${printer.last_seen ? new Date(printer.last_seen).toLocaleString(getIntlLocale()) : '-'}</span>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Recent Jobs Preview -->
                             <div class="details-section">
-                                <h3>📜 Letzte Aufträge</h3>
+                                <h3>📜 ${t('printers.recentJobs')}</h3>
                                 ${recent_jobs.length > 0 ? `
                                 <div class="recent-jobs-list">
                                     ${recent_jobs.slice(0, 3).map(job => `
                                         <div class="recent-job-item">
                                             <div class="job-info">
-                                                <span class="job-name">${escapeHtml(job.file_name || 'Unbekannt')}</span>
+                                                <span class="job-name">${escapeHtml(job.file_name || t('common.unknown'))}</span>
                                                 <span class="job-meta">${job.print_time_minutes ? this.formatMinutes(job.print_time_minutes) : ''} ${job.material_used ? `· ${job.material_used}g` : ''}</span>
                                             </div>
                                             <span class="job-status status-badge status-${job.status}">${this.formatJobStatus(job.status)}</span>
-                                            <span class="job-date">${job.started_at ? new Date(job.started_at).toLocaleDateString('de-DE') : '-'}</span>
+                                            <span class="job-date">${job.started_at ? new Date(job.started_at).toLocaleDateString(getIntlLocale()) : '-'}</span>
                                         </div>
                                     `).join('')}
                                 </div>
-                                <button class="btn btn-link" onclick="printerManager.switchTab('history')">Alle Aufträge anzeigen →</button>
-                                ` : '<p class="no-data">Keine Aufträge vorhanden</p>'}
+                                <button class="btn btn-link" onclick="printerManager.switchTab('history')">${t('printers.showAllJobs')} →</button>
+                                ` : `<p class="no-data">${t('printers.noJobs')}</p>`}
                             </div>
                         </div>
 
@@ -788,7 +788,7 @@ class PrinterManager {
                             ${current_status ? `
                             <!-- Current Job Section -->
                             <div class="details-section current-job-section">
-                                <h3>🖨️ Aktueller Druckauftrag</h3>
+                                <h3>🖨️ ${t('printers.currentPrintJob')}</h3>
                                 ${current_status.current_job ? `
                                 <div class="current-job-card">
                                     <div class="job-header">
@@ -800,7 +800,7 @@ class PrinterManager {
                                     </div>
                                     ${current_status.remaining_time ? `
                                     <div class="job-time-info">
-                                        <span>⏱️ Verbleibend: ${this.formatMinutes(current_status.remaining_time)}</span>
+                                        <span>⏱️ ${t('printers.remaining')}: ${this.formatMinutes(current_status.remaining_time)}</span>
                                     </div>
                                     ` : ''}
 
@@ -809,46 +809,46 @@ class PrinterManager {
                                     <div class="printer-controls">
                                         ${isPrinting ? `
                                             <button class="btn btn-warning" onclick="printerManager.pausePrinter('${printer.id}')">
-                                                ⏸️ Pausieren
+                                                ⏸️ ${t('printers.pause')}
                                             </button>
                                         ` : ''}
                                         ${isPaused ? `
                                             <button class="btn btn-success" onclick="printerManager.resumePrinter('${printer.id}')">
-                                                ▶️ Fortsetzen
+                                                ▶️ ${t('printers.resume')}
                                             </button>
                                         ` : ''}
                                         <button class="btn btn-danger" onclick="printerManager.stopPrinter('${printer.id}')">
-                                            ⏹️ Abbrechen
+                                            ⏹️ ${t('common.cancel')}
                                         </button>
                                     </div>
                                     ` : ''}
                                 </div>
-                                ` : '<p class="no-active-job">Kein aktiver Druckauftrag</p>'}
+                                ` : `<p class="no-active-job">${t('printers.noActivePrintJob')}</p>`}
                             </div>
 
                             <!-- Temperature Section -->
                             ${current_status.temperatures ? `
                             <div class="details-section">
-                                <h3>🌡️ Temperaturen</h3>
+                                <h3>🌡️ ${t('printers.temperatures')}</h3>
                                 <div class="temperature-grid">
                                     <div class="temp-card">
                                         <div class="temp-icon">🛏️</div>
                                         <div class="temp-info">
-                                            <span class="temp-label">Druckbett</span>
+                                            <span class="temp-label">${t('printers.printBed')}</span>
                                             <span class="temp-value ${this.getTempClass(current_status.temperatures.bed)}">
                                                 ${current_status.temperatures.bed.current || 0}°C
                                             </span>
-                                            <span class="temp-target">Ziel: ${current_status.temperatures.bed.target || 0}°C</span>
+                                            <span class="temp-target">${t('printers.target')}: ${current_status.temperatures.bed.target || 0}°C</span>
                                         </div>
                                     </div>
                                     <div class="temp-card">
                                         <div class="temp-icon">🔥</div>
                                         <div class="temp-info">
-                                            <span class="temp-label">Düse</span>
+                                            <span class="temp-label">${t('printers.nozzle')}</span>
                                             <span class="temp-value ${this.getTempClass(current_status.temperatures.nozzle)}">
                                                 ${current_status.temperatures.nozzle.current || 0}°C
                                             </span>
-                                            <span class="temp-target">Ziel: ${current_status.temperatures.nozzle.target || 0}°C</span>
+                                            <span class="temp-target">${t('printers.target')}: ${current_status.temperatures.nozzle.target || 0}°C</span>
                                         </div>
                                     </div>
                                 </div>
@@ -865,74 +865,74 @@ class PrinterManager {
                                             <div class="filament-color" style="background-color: ${f.color || '#ccc'}"></div>
                                             <div class="filament-info">
                                                 <span class="filament-slot-num">Slot ${f.slot === 254 ? 'Ext' : f.slot + 1}</span>
-                                                <span class="filament-type">${f.type || 'Unbekannt'}</span>
+                                                <span class="filament-type">${f.type || t('common.unknown')}</span>
                                             </div>
-                                            ${f.is_active ? '<span class="filament-active-badge">Aktiv</span>' : ''}
+                                            ${f.is_active ? `<span class="filament-active-badge">${t('printers.active')}</span>` : ''}
                                         </div>
                                     `).join('')}
                                 </div>
                             </div>
                             ` : ''}
-                            ` : '<p class="no-data">Status nicht verfügbar</p>'}
+                            ` : `<p class="no-data">${t('printers.statusUnavailable')}</p>`}
                         </div>
 
                         <!-- History Tab -->
                         <div class="tab-content" data-tab="history">
                             <div class="details-section">
-                                <h3>📜 Druckverlauf</h3>
+                                <h3>📜 ${t('printers.printHistory')}</h3>
                                 ${recent_jobs.length > 0 ? `
                                 <div class="job-history-table">
                                     <div class="job-history-header">
-                                        <span>Datei</span>
+                                        <span>${t('printers.file')}</span>
                                         <span>Status</span>
-                                        <span>Dauer</span>
+                                        <span>${t('printers.duration')}</span>
                                         <span>Material</span>
-                                        <span>Datum</span>
+                                        <span>${t('printers.date')}</span>
                                     </div>
                                     ${recent_jobs.map(job => `
                                         <div class="job-history-row">
-                                            <span class="job-filename" title="${escapeHtml(job.file_name || 'Unbekannt')}">${escapeHtml(job.file_name || 'Unbekannt')}</span>
+                                            <span class="job-filename" title="${escapeHtml(job.file_name || t('common.unknown'))}">${escapeHtml(job.file_name || t('common.unknown'))}</span>
                                             <span class="job-status status-badge status-${job.status}">${this.formatJobStatus(job.status)}</span>
                                             <span>${job.print_time_minutes ? this.formatMinutes(job.print_time_minutes) : '-'}</span>
                                             <span>${job.material_used ? `${job.material_used}g` : '-'}</span>
-                                            <span>${job.started_at ? new Date(job.started_at).toLocaleString('de-DE') : '-'}</span>
+                                            <span>${job.started_at ? new Date(job.started_at).toLocaleString(getIntlLocale()) : '-'}</span>
                                         </div>
                                     `).join('')}
                                 </div>
-                                ` : '<p class="no-data">Keine Aufträge vorhanden</p>'}
+                                ` : `<p class="no-data">${t('printers.noJobs')}</p>`}
                             </div>
                         </div>
 
                         <!-- Diagnostics Tab -->
                         <div class="tab-content" data-tab="diagnostics">
                             <div class="details-section">
-                                <h3>🔌 Verbindungsdetails</h3>
+                                <h3>🔌 ${t('printers.connectionDetails')}</h3>
                                 <div class="details-grid details-grid-2">
                                     <div class="detail-item">
-                                        <span class="detail-label">Verbindungsstatus</span>
+                                        <span class="detail-label">${t('printers.connectionStatus')}</span>
                                         <span class="detail-value">${connectionStatus}</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">Protokoll</span>
+                                        <span class="detail-label">${t('printers.protocol')}</span>
                                         <span class="detail-value">${connection.connection_type.toUpperCase()}</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">IP-Adresse</span>
+                                        <span class="detail-label">${t('printers.ipAddress')}</span>
                                         <span class="detail-value">${connection.ip_address}</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">Zuletzt gesehen</span>
-                                        <span class="detail-value">${connection.last_seen ? new Date(connection.last_seen).toLocaleString('de-DE') : '-'}</span>
+                                        <span class="detail-label">${t('printers.lastSeen')}</span>
+                                        <span class="detail-value">${connection.last_seen ? new Date(connection.last_seen).toLocaleString(getIntlLocale()) : '-'}</span>
                                     </div>
                                     ${connection.firmware_version ? `
                                     <div class="detail-item">
-                                        <span class="detail-label">Firmware-Version</span>
+                                        <span class="detail-label">${t('printers.firmwareVersion')}</span>
                                         <span class="detail-value">${connection.firmware_version}</span>
                                     </div>
                                     ` : ''}
                                     ${connection.uptime ? `
                                     <div class="detail-item">
-                                        <span class="detail-label">Betriebszeit</span>
+                                        <span class="detail-label">${t('printers.uptime')}</span>
                                         <span class="detail-value">${this.formatUptime(connection.uptime)}</span>
                                     </div>
                                     ` : ''}
@@ -940,34 +940,34 @@ class PrinterManager {
                             </div>
 
                             <div class="details-section">
-                                <h3>🔧 Diagnose-Aktionen</h3>
+                                <h3>🔧 ${t('printers.diagnosticsActions')}</h3>
                                 <div class="diagnostics-actions">
                                     <button class="btn btn-secondary" onclick="printerManager.testConnection('${printer.id}')">
-                                        🔍 Verbindung testen
+                                        🔍 ${t('printers.testConnection')}
                                     </button>
                                     <button class="btn btn-secondary" onclick="printerManager.reconnectPrinter('${printer.id}')">
-                                        🔄 Neu verbinden
+                                        🔄 ${t('printers.reconnect')}
                                     </button>
                                     <button class="btn btn-secondary" onclick="printerManager.refreshPrinterFiles('${printer.id}')">
-                                        📁 Dateien aktualisieren
+                                        📁 ${t('printers.refreshFiles')}
                                     </button>
                                 </div>
                             </div>
 
                             <div class="details-section">
-                                <h3>ℹ️ System-Informationen</h3>
+                                <h3>ℹ️ ${t('printers.systemInformation')}</h3>
                                 <div class="system-info">
-                                    <p><strong>Drucker-ID:</strong> <code>${printer.id}</code></p>
-                                    <p><strong>Seriennummer:</strong> <code>${printer.serial_number || 'N/A'}</code></p>
-                                    <p><strong>Drucker-Typ:</strong> ${this.formatPrinterType(printer.type)}</p>
+                                    <p><strong>${t('printers.printerId')}:</strong> <code>${printer.id}</code></p>
+                                    <p><strong>${t('printers.serialNumber')}:</strong> <code>${printer.serial_number || 'N/A'}</code></p>
+                                    <p><strong>${t('printers.printerType')}:</strong> ${this.formatPrinterType(printer.type)}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="modal-footer">
-                        <button class="btn btn-secondary" onclick="printerManager.closePrinterDetailsModal()">Schließen</button>
-                        <button class="btn btn-primary" onclick="printerManager.closePrinterDetailsModal(); printerManager.editPrinter('${printer.id}')">✏️ Bearbeiten</button>
+                        <button class="btn btn-secondary" onclick="printerManager.closePrinterDetailsModal()">${t('common.close')}</button>
+                        <button class="btn btn-primary" onclick="printerManager.closePrinterDetailsModal(); printerManager.editPrinter('${printer.id}')">✏️ ${t('common.edit')}</button>
                     </div>
                 </div>
             </div>
@@ -1021,12 +1021,12 @@ class PrinterManager {
      */
     formatStatus(status) {
         const labels = {
-            'online': 'Online',
-            'offline': 'Offline',
-            'printing': 'Druckt',
-            'paused': 'Pausiert',
-            'idle': 'Bereit',
-            'error': 'Fehler'
+            'online': t('status.printer.online'),
+            'offline': t('status.printer.offline'),
+            'printing': t('status.printer.printing'),
+            'paused': t('status.job.paused'),
+            'idle': t('status.printer.idle'),
+            'error': t('status.printer.error')
         };
         return labels[status] || status;
     }
@@ -1036,13 +1036,13 @@ class PrinterManager {
      */
     formatJobStatus(status) {
         const labels = {
-            'pending': 'Wartend',
-            'running': 'Läuft',
-            'printing': 'Druckt',
-            'completed': 'Fertig',
-            'failed': 'Fehlgeschlagen',
-            'cancelled': 'Abgebrochen',
-            'paused': 'Pausiert'
+            'pending': t('status.job.pending'),
+            'running': t('status.job.running'),
+            'printing': t('status.job.printing'),
+            'completed': t('status.job.completed'),
+            'failed': t('status.job.failed'),
+            'cancelled': t('status.job.cancelled'),
+            'paused': t('status.job.paused')
         };
         return labels[status] || status;
     }
@@ -1053,12 +1053,12 @@ class PrinterManager {
     async pausePrinter(printerId) {
         try {
             await api.pausePrinter(printerId);
-            showToast('success', 'Erfolg', 'Druck wurde pausiert');
+            showToast('success', t('common.success'), t('printers.printPaused'));
             this.showPrinterDetails(printerId); // Refresh modal
         } catch (error) {
             Logger.error('Failed to pause printer:', error);
-            const message = error instanceof ApiError ? error.getUserMessage() : 'Konnte Druck nicht pausieren';
-            showToast('error', 'Fehler', message);
+            const message = error instanceof ApiError ? error.getUserMessage() : t('printers.printPauseFailed');
+            showToast('error', t('common.error'), message);
         }
     }
 
@@ -1068,12 +1068,12 @@ class PrinterManager {
     async resumePrinter(printerId) {
         try {
             await api.resumePrinter(printerId);
-            showToast('success', 'Erfolg', 'Druck wird fortgesetzt');
+            showToast('success', t('common.success'), t('printers.printResuming'));
             this.showPrinterDetails(printerId); // Refresh modal
         } catch (error) {
             Logger.error('Failed to resume printer:', error);
-            const message = error instanceof ApiError ? error.getUserMessage() : 'Konnte Druck nicht fortsetzen';
-            showToast('error', 'Fehler', message);
+            const message = error instanceof ApiError ? error.getUserMessage() : t('printers.printResumeFailed');
+            showToast('error', t('common.error'), message);
         }
     }
 
@@ -1081,16 +1081,16 @@ class PrinterManager {
      * Stop/cancel a job
      */
     async stopPrinter(printerId) {
-        if (!confirm('Möchten Sie den Druckauftrag wirklich abbrechen?')) return;
+        if (!confirm(t('printers.cancelJobConfirm'))) return;
 
         try {
             await api.stopPrinter(printerId);
-            showToast('success', 'Erfolg', 'Druckauftrag wurde abgebrochen');
+            showToast('success', t('common.success'), t('printers.jobCancelled'));
             this.showPrinterDetails(printerId); // Refresh modal
         } catch (error) {
             Logger.error('Failed to stop printer:', error);
-            const message = error instanceof ApiError ? error.getUserMessage() : 'Konnte Druckauftrag nicht abbrechen';
-            showToast('error', 'Fehler', message);
+            const message = error instanceof ApiError ? error.getUserMessage() : t('printers.jobCancelFailed');
+            showToast('error', t('common.error'), message);
         }
     }
 
@@ -1098,12 +1098,12 @@ class PrinterManager {
      * Test connection to printer
      */
     async testConnection(printerId) {
-        showToast('info', 'Test', 'Verbindung wird getestet...');
+        showToast('info', t('printers.connectionTest'), t('printers.testingConnection'));
         try {
             await api.getPrinterStatus(printerId);
-            showToast('success', 'Erfolg', 'Verbindung erfolgreich');
+            showToast('success', t('common.success'), t('printers.connectionSuccessful'));
         } catch (error) {
-            showToast('warning', 'Warnung', 'Drucker antwortet nicht');
+            showToast('warning', t('common.warning'), t('printers.printerNotResponding'));
         }
     }
 
@@ -1111,16 +1111,16 @@ class PrinterManager {
      * Reconnect to printer
      */
     async reconnectPrinter(printerId) {
-        showToast('info', 'Verbindung', 'Verbinde neu...');
+        showToast('info', t('printers.connection'), t('printers.reconnecting'));
         try {
             await api.disconnectPrinter(printerId);
             await new Promise(resolve => setTimeout(resolve, 1000));
             await api.connectPrinter(printerId);
-            showToast('success', 'Erfolg', 'Neu verbunden');
+            showToast('success', t('common.success'), t('printers.reconnected'));
             this.showPrinterDetails(printerId); // Refresh modal
         } catch (error) {
-            const message = error instanceof ApiError ? error.getUserMessage() : 'Verbindung fehlgeschlagen';
-            showToast('error', 'Fehler', message);
+            const message = error instanceof ApiError ? error.getUserMessage() : t('printers.connectionFailed');
+            showToast('error', t('common.error'), message);
         }
     }
 
@@ -1128,13 +1128,13 @@ class PrinterManager {
      * Refresh printer files
      */
     async refreshPrinterFiles(printerId) {
-        showToast('info', 'Dateien', 'Dateien werden aktualisiert...');
+        showToast('info', t('printers.files'), t('printers.refreshingFiles'));
         try {
             const data = await api.getPrinterFiles(printerId);
-            showToast('success', 'Erfolg', `${data.files?.length || 0} Dateien gefunden`);
+            showToast('success', t('common.success'), t('printers.filesFound', { count: data.files?.length || 0 }));
         } catch (error) {
-            const message = error instanceof ApiError ? error.getUserMessage() : 'Dateiaktualisierung fehlgeschlagen';
-            showToast('error', 'Fehler', message);
+            const message = error instanceof ApiError ? error.getUserMessage() : t('printers.fileRefreshFailed');
+            showToast('error', t('common.error'), message);
         }
     }
 
@@ -1195,8 +1195,8 @@ class PrinterManager {
             
         } catch (error) {
             Logger.error('Failed to load printer for editing:', error);
-            const message = error instanceof ApiError ? error.getUserMessage() : 'Fehler beim Laden der Drucker-Daten';
-            showToast('error', 'Fehler', message);
+            const message = error instanceof ApiError ? error.getUserMessage() : t('printers.printerDataLoadFailed');
+            showToast('error', t('common.error'), message);
         }
     }
 
@@ -1207,37 +1207,37 @@ class PrinterManager {
         const printer = this.printers.get(printerId);
         if (!printer) return;
 
-        const confirmed = confirm(`Möchten Sie den Drucker "${printer.data.name}" wirklich löschen?`);
+        const confirmed = confirm(t('printers.deleteConfirm', { name: printer.data.name }));
         if (!confirmed) return;
 
         try {
             await api.deletePrinter(printerId);
-            showToast('success', 'Erfolg', CONFIG.SUCCESS_MESSAGES.PRINTER_REMOVED);
+            showToast('success', t('common.success'), CONFIG.SUCCESS_MESSAGES.PRINTER_REMOVED);
             this.loadPrinters();
         } catch (error) {
             // If blocked by active/stale jobs, offer force deletion
             if (error instanceof ApiError && error.status === 409) {
                 const forceConfirmed = confirm(
-                    `${error.message}\n\nMöchten Sie den Drucker trotzdem löschen? (Verbleibende Aufträge werden abgebrochen)`
+                    `${error.message}\n\n${t('printers.forceDeleteConfirm')}`
                 );
                 if (forceConfirmed) {
                     try {
                         await api.deletePrinter(printerId, { force: true });
-                        showToast('success', 'Erfolg', CONFIG.SUCCESS_MESSAGES.PRINTER_REMOVED);
+                        showToast('success', t('common.success'), CONFIG.SUCCESS_MESSAGES.PRINTER_REMOVED);
                         this.loadPrinters();
                         return;
                     } catch (forceError) {
                         Logger.error('Failed to force-delete printer:', forceError);
-                        const message = forceError instanceof ApiError ? forceError.getUserMessage() : 'Fehler beim Löschen des Druckers';
-                        showToast('error', 'Fehler', message);
+                        const message = forceError instanceof ApiError ? forceError.getUserMessage() : t('printers.deleteFailed');
+                        showToast('error', t('common.error'), message);
                         return;
                     }
                 }
                 return;
             }
             Logger.error('Failed to delete printer:', error);
-            const message = error instanceof ApiError ? error.getUserMessage() : 'Fehler beim Löschen des Druckers';
-            showToast('error', 'Fehler', message);
+            const message = error instanceof ApiError ? error.getUserMessage() : t('printers.deleteFailed');
+            showToast('error', t('common.error'), message);
         }
     }
 
@@ -1246,20 +1246,20 @@ class PrinterManager {
      */
     async testConnection(printerId) {
         try {
-            showToast('info', 'Verbindungstest', 'Teste Verbindung zum Drucker...');
+            showToast('info', t('printers.connectionTest'), t('printers.testingPrinterConnection'));
             
             // Get fresh printer status
             const printer = await api.getPrinter(printerId);
             
             if (printer.status === 'online') {
-                showToast('success', 'Verbindung OK', `Drucker ${printer.name} ist erreichbar`);
+                showToast('success', t('printers.connectionOk'), t('printers.printerReachable', { name: printer.name }));
             } else {
-                showToast('warning', 'Verbindung fehlgeschlagen', `Drucker ${printer.name} ist nicht erreichbar`);
+                showToast('warning', t('printers.connectionFailed'), t('printers.printerNotReachable', { name: printer.name }));
             }
             
         } catch (error) {
             Logger.error('Connection test failed:', error);
-            showToast('error', 'Verbindungsfehler', 'Verbindungstest fehlgeschlagen');
+            showToast('error', t('printers.connectionError'), t('printers.connectionTestFailed'));
         }
     }
 
@@ -1267,7 +1267,7 @@ class PrinterManager {
      * Show printer control interface
      */
     showPrinterControl(printerId) {
-        showToast('info', 'Drucker-Steuerung', 'Verwenden Sie die Druck-Steuerungstasten zum Pausieren/Stoppen von Druckaufträgen');
+        showToast('info', t('printers.printerControl'), t('printers.controlHint'));
     }
     
     /**
@@ -1277,22 +1277,22 @@ class PrinterManager {
         const printer = this.printers.get(printerId);
         if (!printer) return;
         
-        const confirmed = confirm(`Möchten Sie den Druckauftrag auf "${printer.data.name}" pausieren?`);
+        const confirmed = confirm(t('printers.pauseConfirm', { name: printer.data.name }));
         if (!confirmed) return;
         
         try {
-            showToast('info', 'Pausieren', 'Pausiere Druckauftrag...');
+            showToast('info', t('printers.pause'), t('printers.pausingJob'));
             
             await api.pausePrinter(printerId);
-            showToast('success', 'Erfolg', 'Druckauftrag wurde pausiert');
+            showToast('success', t('common.success'), t('printers.jobPaused'));
             
             // Refresh printer status
             this.refreshPrinters();
             
         } catch (error) {
             Logger.error('Failed to pause print:', error);
-            const message = error instanceof ApiError ? error.getUserMessage() : 'Fehler beim Pausieren des Druckauftrags';
-            showToast('error', 'Fehler', message);
+            const message = error instanceof ApiError ? error.getUserMessage() : t('printers.jobPauseFailed');
+            showToast('error', t('common.error'), message);
         }
     }
     
@@ -1303,22 +1303,22 @@ class PrinterManager {
         const printer = this.printers.get(printerId);
         if (!printer) return;
         
-        const confirmed = confirm(`Möchten Sie den Druckauftrag auf "${printer.data.name}" fortsetzen?`);
+        const confirmed = confirm(t('printers.resumeConfirm', { name: printer.data.name }));
         if (!confirmed) return;
         
         try {
-            showToast('info', 'Fortsetzen', 'Setze Druckauftrag fort...');
+            showToast('info', t('printers.resume'), t('printers.resumingJob'));
             
             await api.resumePrinter(printerId);
-            showToast('success', 'Erfolg', 'Druckauftrag wurde fortgesetzt');
+            showToast('success', t('common.success'), t('printers.jobResumed'));
             
             // Refresh printer status
             this.refreshPrinters();
             
         } catch (error) {
             Logger.error('Failed to resume print:', error);
-            const message = error instanceof ApiError ? error.getUserMessage() : 'Fehler beim Fortsetzen des Druckauftrags';
-            showToast('error', 'Fehler', message);
+            const message = error instanceof ApiError ? error.getUserMessage() : t('printers.jobResumeFailed');
+            showToast('error', t('common.error'), message);
         }
     }
     
@@ -1329,22 +1329,22 @@ class PrinterManager {
         const printer = this.printers.get(printerId);
         if (!printer) return;
         
-        const confirmed = confirm(`Möchten Sie den Druckauftrag auf "${printer.data.name}" wirklich stoppen? Dies kann nicht rückgängig gemacht werden.`);
+        const confirmed = confirm(t('printers.stopConfirm', { name: printer.data.name }));
         if (!confirmed) return;
         
         try {
-            showToast('info', 'Stoppen', 'Stoppe Druckauftrag...');
+            showToast('info', t('printers.stop'), t('printers.stoppingJob'));
             
             await api.stopPrinter(printerId);
-            showToast('success', 'Erfolg', 'Druckauftrag wurde gestoppt');
+            showToast('success', t('common.success'), t('printers.jobStopped'));
             
             // Refresh printer status
             this.refreshPrinters();
             
         } catch (error) {
             Logger.error('Failed to stop print:', error);
-            const message = error instanceof ApiError ? error.getUserMessage() : 'Fehler beim Stoppen des Druckauftrags';
-            showToast('error', 'Fehler', message);
+            const message = error instanceof ApiError ? error.getUserMessage() : t('printers.jobStopFailed');
+            showToast('error', t('common.error'), message);
         }
     }
 
@@ -1355,15 +1355,15 @@ class PrinterManager {
         const printer = this.printers.get(printerId);
         if (!printer) return;
         try {
-            showToast('info', 'Thumbnail', 'Lade aktuelle Druckdatei herunter...');
+            showToast('info', t('printers.thumbnail'), t('printers.downloadingCurrentFile'));
             const result = await api.downloadCurrentJobFile(printerId);
-            const status = result.status || 'unbekannt';
+            const status = result.status || t('common.unknown');
             if (status === 'exists_with_thumbnail' || status === 'processed' || status === 'success') {
-                showToast('success', 'Thumbnail', 'Thumbnail wurde bereitgestellt.');
+                showToast('success', t('printers.thumbnail'), t('printers.thumbnailReady'));
             } else if (status === 'not_printing') {
-                showToast('warning', 'Kein Druck', 'Kein aktiver Druckauftrag vorhanden.');
+                showToast('warning', t('printers.noPrint'), t('printers.noActiveJobMessage'));
             } else if (status === 'exists_no_thumbnail') {
-                showToast('info', 'Keine Vorschau', 'Datei ohne eingebettetes Thumbnail oder Parsing fehlgeschlagen.');
+                showToast('info', t('printers.noPreview'), t('printers.noEmbeddedThumbnail'));
             } else {
                 showToast('info', 'Status', `Status: ${status}`);
             }
@@ -1371,8 +1371,8 @@ class PrinterManager {
             this.refreshPrinters();
         } catch (error) {
             Logger.error('Failed to download current job file:', error);
-            const message = error instanceof ApiError ? error.getUserMessage() : 'Fehler beim Herunterladen der aktuellen Datei';
-            showToast('error', 'Fehler', message);
+            const message = error instanceof ApiError ? error.getUserMessage() : t('printers.currentFileDownloadFailed');
+            showToast('error', t('common.error'), message);
         }
     }
 
@@ -1384,18 +1384,18 @@ class PrinterManager {
             const stats = await api.getPrinterStatistics(printerId);
             
             // Create simple statistics display (placeholder)
-            const message = `
-                Aufträge: ${stats.jobs.total_jobs}
-                Erfolgsrate: ${formatPercentage(stats.jobs.success_rate * 100)}
-                Betriebszeit: ${formatDuration(stats.uptime.active_hours * 3600)}
-                Material: ${formatWeight(stats.materials.total_used_kg * 1000)}
-            `;
+            const message = t('printers.statisticsMessage', {
+                jobs: stats.jobs.total_jobs,
+                successRate: formatPercentage(stats.jobs.success_rate * 100),
+                uptime: formatDuration(stats.uptime.active_hours * 3600),
+                material: formatWeight(stats.materials.total_used_kg * 1000)
+            });
             
-            showToast('info', 'Drucker-Statistiken', message);
+            showToast('info', t('printers.printerStatistics'), message);
             
         } catch (error) {
             Logger.error('Failed to load printer statistics:', error);
-            showToast('error', 'Fehler', 'Statistiken konnten nicht geladen werden');
+            showToast('error', t('common.error'), t('printers.statisticsLoadFailed'));
         }
     }
 
@@ -1495,14 +1495,14 @@ async function discoverPrinters() {
         discoveredList.innerHTML = `
             <div class="loading-placeholder">
                 <div class="spinner"></div>
-                <p>Suche nach Druckern im Netzwerk...</p>
+                <p>${t('printers.searchingNetwork')}</p>
             </div>
         `;
 
         // Disable discover button
         if (discoverButton) {
             discoverButton.disabled = true;
-            discoverButton.innerHTML = '<span class="btn-icon">⏳</span> Suche läuft...';
+            discoverButton.innerHTML = `<span class="btn-icon">⏳</span> ${t('printers.searchRunning')}`;
         }
 
         // Get selected interface (if any)
@@ -1532,21 +1532,21 @@ async function discoverPrinters() {
 
             // Show success message with proper counts
             if (newCount > 0) {
-                showNotification(`${newCount} neue Drucker gefunden (${totalCount} gesamt, ${response.scan_duration_ms}ms)`, 'success');
+                showNotification(t('printers.discoveredNew', { count: newCount, total: totalCount, duration: response.scan_duration_ms }), 'success');
             } else {
-                showNotification(`${totalCount} Drucker gefunden (alle bereits hinzugefügt, ${response.scan_duration_ms}ms)`, 'info');
+                showNotification(t('printers.discoveredAllAdded', { total: totalCount, duration: response.scan_duration_ms }), 'info');
             }
         } else {
             discoveredList.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-icon">🔍</div>
-                    <h3>Keine Drucker gefunden</h3>
-                    <p>Es wurden keine Drucker im Netzwerk gefunden.</p>
-                    <p class="text-sm text-muted">Stellen Sie sicher, dass:</p>
+                    <h3>${t('printers.noPrintersFound')}</h3>
+                    <p>${t('printers.noPrintersFoundMessage')}</p>
+                    <p class="text-sm text-muted">${t('printers.makeSure')}</p>
                     <ul class="text-sm text-muted" style="text-align: left; max-width: 400px; margin: 10px auto;">
-                        <li>Ihre Drucker eingeschaltet und mit dem Netzwerk verbunden sind</li>
-                        <li>Sie sich im gleichen Netzwerk befinden</li>
-                        <li>Bei Docker/Home Assistant: Host-Netzwerkmodus aktiviert ist</li>
+                        <li>${t('printers.checkPowered')}</li>
+                        <li>${t('printers.checkSameNetwork')}</li>
+                        <li>${t('printers.checkHostNetwork')}</li>
                     </ul>
                 </div>
             `;
@@ -1565,16 +1565,16 @@ async function discoverPrinters() {
         discoveredList.innerHTML = `
             <div class="error-state">
                 <div class="error-icon">⚠️</div>
-                <h3>Fehler bei der Drucker-Suche</h3>
-                <p>${escapeHtml(error.message || 'Unbekannter Fehler')}</p>
+                <h3>${t('printers.searchFailedTitle')}</h3>
+                <p>${escapeHtml(error.message || t('printers.unknownError'))}</p>
             </div>
         `;
-        showNotification('Drucker-Suche fehlgeschlagen', 'error');
+        showNotification(t('printers.searchFailed'), 'error');
     } finally {
         // Re-enable discover button
         if (discoverButton) {
             discoverButton.disabled = false;
-            discoverButton.innerHTML = '<span class="btn-icon">🔍</span> Drucker suchen';
+            discoverButton.innerHTML = `<span class="btn-icon">🔍</span> ${t('printers.searchPrinters')}`;
         }
     }
 }
@@ -1596,8 +1596,8 @@ function createDiscoveredPrinterCard(printer) {
         '<span class="badge badge-prusa"><img src="/assets/prusa-icon.svg" class="badge-icon" alt="">Prusa</span>';
 
     const statusBadge = printer.already_added ?
-        '<span class="badge badge-secondary">Bereits hinzugefügt</span>' :
-        '<span class="badge badge-success">Neu gefunden</span>';
+        `<span class="badge badge-secondary">${t('printers.alreadyAdded')}</span>` :
+        `<span class="badge badge-success">${t('printers.newlyFound')}</span>`;
 
     card.innerHTML = `
         <div class="card-header">
@@ -1615,7 +1615,7 @@ function createDiscoveredPrinterCard(printer) {
         <div class="card-body">
             <div class="printer-info">
                 <div class="info-row">
-                    <span class="label">IP-Adresse:</span>
+                    <span class="label">${t('printers.ipAddress')}:</span>
                     <span class="value">${escapeHtml(printer.ip)}</span>
                 </div>
                 <div class="info-row">
@@ -1624,7 +1624,7 @@ function createDiscoveredPrinterCard(printer) {
                 </div>
                 ${printer.model ? `
                 <div class="info-row">
-                    <span class="label">Modell:</span>
+                    <span class="label">${t('printers.model')}:</span>
                     <span class="value">${escapeHtml(printer.model)}</span>
                 </div>
                 ` : ''}
@@ -1634,12 +1634,12 @@ function createDiscoveredPrinterCard(printer) {
             ${!printer.already_added ? `
                 <button class="btn btn-primary" onclick="addDiscoveredPrinter('${sanitizeAttribute(printer.ip)}', '${sanitizeAttribute(printer.type)}', '${sanitizeAttribute(printer.name || printer.hostname)}')">
                     <span class="btn-icon">➕</span>
-                    Hinzufügen
+                    ${t('common.add')}
                 </button>
             ` : `
                 <button class="btn btn-secondary" disabled>
                     <span class="btn-icon">✓</span>
-                    Bereits konfiguriert
+                    ${t('printers.alreadyConfigured')}
                 </button>
             `}
         </div>
@@ -1699,13 +1699,13 @@ async function loadNetworkInterfaces() {
 
         if (response.interfaces && response.interfaces.length > 0) {
             // Clear existing options except auto-detect
-            interfaceSelect.innerHTML = '<option value="">Auto-Erkennung</option>';
+            interfaceSelect.innerHTML = `<option value="">${t('printers.autoDetect')}</option>`;
 
             // Add interfaces
             response.interfaces.forEach(iface => {
                 const option = document.createElement('option');
                 option.value = iface.name;
-                option.textContent = `${iface.name} (${iface.ip})${iface.is_default ? ' - Standard' : ''}`;
+                option.textContent = `${iface.name} (${iface.ip})${iface.is_default ? ` - ${t('printers.defaultInterface')}` : ''}`;
                 if (iface.is_default) {
                     option.selected = false; // Keep auto-detect selected by default
                 }
