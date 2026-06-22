@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.37.0] - 2026-06-22
+
+### Added
+- **Model generator: generator-as-engine templates** that build geometry from external input:
+  - **SVG → Extrude** — turn an uploaded SVG (logo, icon, outline) into a 3D part with holes preserved, scaled to a target size with an optional backing plate. Parsed via `@jscad/svg-deserializer` into outlines and extruded with even-odd hole detection, which handles curve- and hole-heavy artwork that naive geom2 extrusion chokes on.
+  - **Lithophane** — convert a photo into a backlit lithophane (darker areas print thicker) by sampling the image to a capped grid and building a watertight height-mapped mesh. Configurable width, min/max thickness, sampling resolution and invert.
+  - **Custom (JSCAD code)** — advanced template that runs user-written JSCAD code (in the browser only) and saves the resulting solid to the library.
+- Generator engine: added a `textarea` parameter input type; refactored a shared even-odd outline-extrusion core used by both the text and SVG templates.
+
+## [2.36.0] - 2026-06-22
+
+### Added
+- **Model generator: functional-parts library.** Four new templates aimed at practical, repeatedly-needed prints:
+  - **Gridfinity Bin** — Gridfinity-compatible storage bins on the standard 42mm grid with 7mm height units and the canonical base "foot" profile (0.8/1.8/2.15mm chamfers, 0.5mm clearance). Configurable grid size, height, wall thickness and optional 6.5mm magnet / 3mm screw holes (positioned to spec, 13mm from each cell centre).
+  - **Gridfinity Baseplate** — a matching baseplate that bins drop into, with optional mounting screw holes.
+  - **Bracket / Mounting Plate** — a flat plate or right-angle (L) bracket with corner bolt holes and optional counterbore.
+  - **Standoff / Spacer** — round or hex, with an optional through-bore.
+
 ## [2.35.0] - 2026-06-21
 
 ### Added
