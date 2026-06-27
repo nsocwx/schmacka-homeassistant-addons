@@ -3,11 +3,15 @@ Library API Router - Unified file management endpoints.
 Provides REST API for library operations (list, get, reprocess, delete).
 """
 
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
+from pathlib import Path
 from fastapi import APIRouter, HTTPException, Query, Path as PathParam, Depends
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 import structlog
 import asyncio
+
+from src.utils.dependencies import get_printer_service
 
 from src.utils.errors import (
     LibraryItemNotFoundError,
@@ -138,6 +142,12 @@ class LibraryMetadataResponse(BaseModel):
     last_analyzed: Optional[str] = None
 
 
+class PrintfilesResponse(BaseModel):
+    """Printfiles derived from a model, with slicing job enrichment."""
+    printfiles: List[Dict[str, Any]]
+    count: int
+
+
 # Dependency to get library service
 async def get_library_service():
     """Get library service from application state."""
@@ -257,6 +267,72 @@ async def get_library_file(
         raise LibraryItemNotFoundError(checksum)
 
     return file_record
+
+
+@router.get("/files/{checksum}/printfiles", response_model=PrintfilesResponse)
+async def get_model_printfiles(
+    checksum: str,
+    library_service = Depends(get_library_service),
+):
+    """List print files derived from a library model."""
+    model = await library_service.get_file_by_checksum(checksum)
+    if not model:
+        raise LibraryItemNotFoundError(checksum)
+    printfiles = await library_service.get_printfiles_for_model(checksum)
+    return PrintfilesResponse(printfiles=printfiles, count=len(printfiles))
+
+
+@router.get("/files/{checksum}/download")
+async def download_library_file(
+    checksum: str,
+    library_service = Depends(get_library_service),
+):
+    """Download the raw bytes of a library file."""
+    row = await library_service.get_file_by_checksum(checksum)
+    if not row:
+        raise LibraryItemNotFoundError(checksum)
+    abs_path = Path(library_service.library_path) / row["library_path"]
+    if not abs_path.exists():
+        raise LibraryItemNotFoundError(checksum, details={"reason": "file_missing"})
+    return FileResponse(str(abs_path), filename=row.get("filename") or abs_path.name)
+
+
+class PrintFileRequest(BaseModel):
+    """Request to print an existing library print file on a printer."""
+    printer_id: str
+
+
+_PRINTABLE_EXT = {".gcode", ".gco", ".g", ".bgcode", ".3mf"}
+
+
+@router.post("/files/{checksum}/print")
+async def print_library_file(
+    checksum: str,
+    request: PrintFileRequest,
+    library_service = Depends(get_library_service),
+    printer_service = Depends(get_printer_service),
+):
+    """Upload an existing library print file to a printer and start the print."""
+    row = await library_service.get_file_by_checksum(checksum)
+    if not row:
+        raise LibraryItemNotFoundError(checksum)
+    file_type = (row.get("file_type") or "").lower()
+    if row.get("role") != "printfile" and file_type not in _PRINTABLE_EXT:
+        raise HTTPException(status_code=400, detail="File is not a printable print file")
+    abs_path = Path(library_service.library_path) / row["library_path"]
+    if not abs_path.exists():
+        raise LibraryItemNotFoundError(checksum, details={"reason": "file_missing"})
+    filename = row.get("filename") or abs_path.name
+    driver = await printer_service.get_printer_driver(request.printer_id)
+    if not driver:
+        raise HTTPException(status_code=404, detail="Printer not found")
+    uploaded = await printer_service.upload_file_to_printer(request.printer_id, str(abs_path), filename)
+    if not uploaded:
+        raise HTTPException(status_code=502, detail="Failed to upload file to printer")
+    started = await driver.start_print(filename)
+    if not started:
+        raise HTTPException(status_code=502, detail="Uploaded but failed to start print")
+    return {"status": "started", "filename": filename}
 
 
 @router.post("/files/{checksum}/reprocess", response_model=ReprocessResponse)
