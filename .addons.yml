@@ -10,4 +10,4 @@ addons:
     branch: main
     source_path: prusa_connect_rtsp
     target: rtsp-to-prusa-ha
-    image: ghcr.io/schmacka/rtsp-to-prusa-ha-{arch}
+    image: ghcr.io/nsocwx/rtsp-to-prusa-ha-{arch}
